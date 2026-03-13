@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="400" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="430" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">R0</text>
+<rect x="200" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="230" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">L1</text>
+<rect x="200" y="300" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="230" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">L3</text>
+<rect x="0" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="30" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">L0</text>
+<rect x="600" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="630" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">R1</text>
+<rect x="400" y="300" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="430" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">R2</text>
+<rect x="0" y="300" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="30" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">L2</text>
+<rect x="600" y="300" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="630" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">R3</text>
+<polyline points="75, 25 75, 15 385, 15 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="75, 25 75, 15 585, 15 585, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="75, 25 75, 315 385, 315 385, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="75, 25 75, 315 585, 315 585, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="275, 25 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="275, 25 275, 15 585, 15 585, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="275, 25 275, 325 385, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="275, 25 275, 315 585, 315 585, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="75, 325 75, 45 385, 45 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="75, 325 75, 45 585, 45 585, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+<polyline points="75, 325 75, 315 385, 315 385, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-11)" />
+<polyline points="75, 325 75, 315 585, 315 585, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-12)" />
+<polyline points="275, 325 275, 25 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-13)" />
+<polyline points="275, 325 275, 45 585, 45 585, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-14)" />
+<polyline points="275, 325 385, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-15)" />
+<polyline points="275, 325 275, 315 585, 315 585, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-16)" />
+</svg>

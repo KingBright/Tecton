@@ -1,0 +1,15 @@
+[package]
+name = "tecton_types"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "Base types for Tecton architecture diagram rendering engine"
+
+[dependencies]
+ordered-float = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }

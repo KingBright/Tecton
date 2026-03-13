@@ -1,0 +1,37 @@
+[workspace]
+members = [
+    "crates/tecton_types",
+    "crates/tecton_layout",
+    "crates/tecton_routing",
+    "crates/tecton_render",
+    "crates/tecton_engine",
+    "crates/tecton_dsl",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Tecton Contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tecton/tecton"
+
+[workspace.dependencies]
+# Internal crates
+tecton_types = { path = "crates/tecton_types" }
+tecton_layout = { path = "crates/tecton_layout" }
+tecton_routing = { path = "crates/tecton_routing" }
+tecton_render = { path = "crates/tecton_render" }
+tecton_engine = { path = "crates/tecton_engine" }
+tecton_dsl = { path = "crates/tecton_dsl" }
+
+# External dependencies
+petgraph = "0.6"
+taffy = "0.4"
+pathfinding = "4.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+thiserror = "1.0"
+anyhow = "1.0"
+ordered-float = "4.2"

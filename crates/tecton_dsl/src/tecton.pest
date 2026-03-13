@@ -1,0 +1,122 @@
+// Tecton DSL Grammar
+// Based on Pest PEG syntax
+
+// ==================== WHITESPACE & COMMENTS ====================
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT    = _{ "//" ~ (!"\n" ~ ANY)* }
+
+// ==================== BASIC ATOMS ====================
+
+identifier = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
+number     = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+string     = ${ "\"" ~ inner_string ~ "\"" }
+inner_string = @{ (!"\"" ~ ANY)* }
+
+hex_color  = @{ "#" ~ ASCII_HEX_DIGIT{6} }
+
+unit       = @{ "px" | "%" | "em" | "rem" | "pt" }
+value_with_unit = ${ number ~ unit? }
+
+// ==================== PROPERTIES ====================
+
+property_key = { identifier }
+
+property_value = {
+    string
+  | hex_color
+  | value_with_unit
+  | identifier
+  | number
+}
+
+property = { property_key ~ ":" ~ property_value }
+
+properties = {
+    "(" ~ property ~ ("," ~ property)* ~ ")"
+  | "(" ~ ")"
+}
+
+// ==================== SHAPES ====================
+
+shape_type = {
+    "Rectangle"
+  | "Circle"
+  | "Diamond"
+  | "Cylinder"
+  | "Parallelogram"
+  | "Hexagon"
+  | "Cloud"
+}
+
+// ==================== NODE DEFINITIONS ====================
+
+node_id = { identifier }
+
+node_body = {
+    "[" ~ property ~ ("," ~ property)* ~ "]"
+  | "[" ~ "]"
+}
+
+node_stmt = {
+    node_id ~ node_body?
+}
+
+// ==================== CONTAINER DEFINITIONS ====================
+
+container_kind = {
+    "Row"
+  | "Col"
+  | "Column"
+  | "Stack"
+}
+
+container_body = {
+    "{" ~ stmt* ~ "}"
+}
+
+container_stmt = {
+    container_kind ~ properties? ~ container_body
+}
+
+// ==================== CLASS DEFINITIONS ====================
+
+class_def = {
+    "class" ~ identifier ~ "{" ~ property ~ ("," ~ property)* ~ "}"
+}
+
+// ==================== CONFIGURATION ====================
+
+config_stmt = {
+    "config" ~ "{" ~ property ~ ("," ~ property)* ~ "}"
+}
+
+// ==================== EDGES (CONNECTIONS) ====================
+
+edge_op = { "->" | "=>" | "-->" }
+
+edge_chain = {
+    node_id ~ (edge_op ~ node_id)+
+}
+
+edge_label = { ":" ~ string }
+
+edge_stmt = {
+    edge_chain ~ edge_label?
+}
+
+// ==================== STATEMENTS ====================
+
+stmt = {
+    container_stmt
+  | class_def
+  | config_stmt
+  | edge_stmt
+  | node_stmt
+}
+
+// ==================== ROOT ====================
+
+file = {
+    SOI ~ stmt* ~ EOI
+}

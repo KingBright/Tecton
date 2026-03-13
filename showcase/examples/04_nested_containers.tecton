@@ -1,0 +1,22 @@
+// Example 04: Nested Containers
+// Demonstrates 3-layer nested structure with mixed Row and Col layouts
+
+config {
+    width: 900,
+    height: 700
+}
+
+Row {
+    Sidebar [label: "Sidebar"]
+
+    Col {
+        Header [label: "Header"]
+
+        Row {
+            Left [label: "Left Panel"]
+            Right [label: "Right Panel"]
+        }
+
+        Footer [label: "Footer"]
+    }
+}

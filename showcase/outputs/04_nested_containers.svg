@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="560" height="310" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="10" y="15" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Row</text>
+<rect x="20" y="20" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Sidebar</text>
+<rect x="150" y="20" width="390" height="270" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="160" y="35" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Column</text>
+<rect x="170" y="40" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="220" y="65" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Header</text>
+<rect x="170" y="110" width="350" height="90" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="180" y="125" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Row</text>
+<rect x="190" y="130" width="140" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="260" y="155" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Left Panel</text>
+<rect x="350" y="130" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="425" y="155" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Right Panel</text>
+<rect x="170" y="220" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="220" y="245" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Footer</text>
+</svg>

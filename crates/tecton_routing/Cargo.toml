@@ -1,0 +1,15 @@
+[package]
+name = "tecton_routing"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "Smart routing layer for Tecton - A* pathfinding and congestion detection"
+
+[dependencies]
+tecton_types = { workspace = true }
+pathfinding = { workspace = true }
+ordered-float = { workspace = true }
+thiserror = { workspace = true }
+petgraph = { workspace = true }

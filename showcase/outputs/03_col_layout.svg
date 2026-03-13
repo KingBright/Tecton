@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="220" height="230" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="10" y="15" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Column</text>
+<rect x="20" y="20" width="180" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="110" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Header Section</text>
+<rect x="20" y="90" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="100" y="115" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Main Content</text>
+<rect x="20" y="160" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="70" y="185" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Footer</text>
+</svg>

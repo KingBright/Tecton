@@ -1,0 +1,34 @@
+// Example 06: Complex Flow
+// A multi-step business process with branching
+
+config {
+    width: 1000,
+    height: 600
+}
+
+// Input node
+Start [label: "Start"]
+
+// Decision point
+Decision [label: "Valid?"]
+
+// Processing nodes
+ProcessA [label: "Process A"]
+ProcessB [label: "Process B"]
+
+// Error handling
+ErrorHandler [label: "Error Handler"]
+
+// Merge point
+Merge [label: "Merge"]
+
+// Final output
+End [label: "End"]
+
+// Connections
+Start -> Decision
+Decision -> ProcessA
+Decision -> ErrorHandler
+ProcessA -> Merge
+ErrorHandler -> Merge
+Merge -> End

@@ -1,0 +1,27 @@
+[package]
+name = "tecton_engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "Orchestration and control layer for Tecton"
+
+[dependencies]
+tecton_types = { workspace = true }
+tecton_layout = { workspace = true }
+tecton_routing = { workspace = true }
+tecton_render = { workspace = true }
+tecton_dsl = { workspace = true }
+petgraph = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+ordered-float = { workspace = true }
+taffy.workspace = true
+
+[[bin]]
+name = "showcase"
+path = "src/bin/showcase.rs"

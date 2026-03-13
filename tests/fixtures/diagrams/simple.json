@@ -1,0 +1,10 @@
+{
+    "canvas": {"width": 400, "height": 300},
+    "nodes": [
+        {"label": "A", "ports": [{"name": "out", "side": "east"}]},
+        {"label": "B", "ports": [{"name": "in", "side": "west"}]}
+    ],
+    "edges": [
+        {"from": "node_1:out", "to": "node_2:in"}
+    ]
+}

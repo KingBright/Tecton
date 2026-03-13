@@ -1,0 +1,12 @@
+// Example 05: Basic Edges
+// Demonstrates point-to-point connections between nodes
+
+config {
+    width: 800,
+    height: 500
+}
+
+Source [label: "Source Node"]
+Target [label: "Target Node"]
+
+Source -> Target

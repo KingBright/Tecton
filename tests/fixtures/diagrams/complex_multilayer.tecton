@@ -1,0 +1,52 @@
+// Complex multi-layer diagram
+// Demonstrates containers, shapes, and nested structures
+
+config {
+    width: 1200,
+    height: 800,
+    background: "#FAFAFA"
+}
+
+// Top-level container
+MainContainer {
+    Col {
+        // Header section
+        Header [label: "Application Architecture", style: { fill: "#E3F2FD" }]
+
+        // Content area
+        Content {
+            Row {
+                // Left panel
+                LeftPanel {
+                    Col {
+                        SidebarHeader [label: "Navigation", style: { fill: "#FFF3E0" }]
+                        SidebarContent [label: "Menu Items", style: { fill: "#FFFFFF" }]
+                    }
+                }
+
+                // Main content area
+                MainContent {
+                    Col {
+                        Toolbar [label: "Toolbar", style: { fill: "#F3E5F5" }]
+
+                        Workspace {
+                            Row {
+                                Canvas [label: "Canvas Area", style: { fill: "#FFFFFF" }]
+                                Properties [label: "Properties Panel", style: { fill: "#E8F5E9" }]
+                            }
+                        }
+
+                        StatusBar [label: "Status Bar", style: { fill: "#ECEFF1" }]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Data layer
+Database [label: "PostgreSQL", shape: "cylinder", style: { fill: "#FFF8E1" }]
+Cache [label: "Redis", shape: "cylinder", style: { fill: "#FFECB3" }]
+
+// External services
+ExternalAPI [label: "External API", shape: "cloud", style: { fill: "#ECEFF1" }]

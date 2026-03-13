@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="606" y="208" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="651" y="233" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Redis</text>
+<rect x="187" y="214" width="120" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="247" y="239" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User Svc</text>
+<rect x="0" y="214" width="70" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="35" y="239" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">API</text>
+<rect x="398" y="0" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="463" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order Svc</text>
+<rect x="398" y="208" width="120" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="458" y="233" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Database</text>
+<rect x="0" y="0" width="140" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="70" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Web Server</text>
+<polyline points="70, 65 75, 65 75, 195 35, 195 35, 199" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<text x="75" y="187" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">HTTP</text>
+<polyline points="85, 239 85, 235 175, 235 175, 239 172, 239" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<text x="175" y="227" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">RPC</text>
+<polyline points="85, 239 85, 45 385, 45 385, 25 383, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<text x="385" y="37" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">RPC</text>
+<polyline points="322, 239 322, 235 385, 235 385, 233 383, 233" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<text x="385" y="227" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">SQL</text>
+<polyline points="463, 65 465, 65 465, 195 458, 195 458, 193" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<text x="465" y="187" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">SQL</text>
+<polyline points="322, 239 322, 235 325, 235 325, 255 595, 255 595, 235 591, 235 591, 233" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<text x="595" y="247" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">GET</text>
+<polyline points="463, 65 655, 65 655, 195 651, 195 651, 193" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<text x="655" y="187" fill="#6b7280" font-size="12" text-anchor="middle" class="label" dominant-baseline="middle">GET</text>
+</svg>

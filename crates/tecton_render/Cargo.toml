@@ -1,0 +1,14 @@
+[package]
+name = "tecton_render"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "Rendering layer for Tecton - SVG backend"
+
+[dependencies]
+tecton_types = { workspace = true }
+tecton_layout = { workspace = true }
+tecton_routing = { workspace = true }
+thiserror = { workspace = true }

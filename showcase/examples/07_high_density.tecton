@@ -1,0 +1,62 @@
+// Example 07: High Density
+// Demonstrates congestion detection and space expansion
+// 20 nodes with multiple connections to trigger congestion feedback
+
+config {
+    width: 1200,
+    height: 900
+}
+
+// Create a grid of nodes
+N1 [label: "Node 1"]
+N2 [label: "Node 2"]
+N3 [label: "Node 3"]
+N4 [label: "Node 4"]
+N5 [label: "Node 5"]
+N6 [label: "Node 6"]
+N7 [label: "Node 7"]
+N8 [label: "Node 8"]
+N9 [label: "Node 9"]
+N10 [label: "Node 10"]
+N11 [label: "Node 11"]
+N12 [label: "Node 12"]
+N13 [label: "Node 13"]
+N14 [label: "Node 14"]
+N15 [label: "Node 15"]
+N16 [label: "Node 16"]
+N17 [label: "Node 17"]
+N18 [label: "Node 18"]
+N19 [label: "Node 19"]
+N20 [label: "Node 20"]
+
+// Dense interconnections - this should trigger congestion feedback
+N1 -> N5
+N1 -> N6
+N1 -> N7
+N2 -> N5
+N2 -> N8
+N3 -> N6
+N3 -> N9
+N4 -> N7
+N4 -> N8
+N4 -> N9
+N5 -> N10
+N5 -> N11
+N6 -> N10
+N6 -> N12
+N7 -> N11
+N7 -> N13
+N8 -> N12
+N8 -> N14
+N9 -> N13
+N9 -> N14
+N10 -> N15
+N11 -> N15
+N12 -> N16
+N13 -> N16
+N14 -> N17
+N15 -> N18
+N16 -> N18
+N17 -> N19
+N18 -> N20
+N19 -> N20

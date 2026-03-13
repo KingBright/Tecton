@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="426" y="300" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="491" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Service B</text>
+<rect x="0" y="0" width="120" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="60" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Frontend</text>
+<rect x="426" y="0" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="491" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Service A</text>
+<rect x="0" y="256" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="281" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">API Gateway</text>
+<polyline points="135, 25 135, 155 5, 155 5, 285 -15, 285 -15, 281" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="165, 281 165, 25 411, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="165, 281 165, 285 491, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+</svg>

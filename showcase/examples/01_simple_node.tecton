@@ -1,0 +1,9 @@
+// Example 01: Simple Node
+// The most basic use case - a single node with a label
+
+config {
+    width: 400,
+    height: 300
+}
+
+Node [label: "Hello, Tecton!"]

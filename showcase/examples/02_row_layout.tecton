@@ -1,0 +1,13 @@
+// Example 02: Row Layout
+// Demonstrates horizontal arrangement of nodes using Row container
+
+config {
+    width: 800,
+    height: 400
+}
+
+Row {
+    Node1 [label: "First"]
+    Node2 [label: "Second"]
+    Node3 [label: "Third"]
+}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="347" y="400" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="397" y="425" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 4</text>
+<rect x="347" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="397" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 2</text>
+<rect x="0" y="0" width="70" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="35" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Hub</text>
+<rect x="0" y="339" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="50" y="364" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 1</text>
+<rect x="574" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="624" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 3</text>
+<polyline points="35, 65 15, 65 15, 405 50, 405 50, 404" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="85, 25 332, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="85, 25 355, 25 355, 5 625, 5 625, -15 624, -15" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="35, 65 465, 65 465, 425 462, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+</svg>

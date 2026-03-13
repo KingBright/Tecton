@@ -1,0 +1,13 @@
+// Example 03: Column Layout
+// Demonstrates vertical arrangement of nodes using Col container
+
+config {
+    width: 600,
+    height: 600
+}
+
+Col {
+    Header [label: "Header Section"]
+    Content [label: "Main Content"]
+    Footer [label: "Footer"]
+}

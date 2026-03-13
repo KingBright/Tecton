@@ -1,0 +1,51 @@
+// Example 08: Microservices Architecture
+// A realistic microservices system diagram
+
+config {
+    width: 1400,
+    height: 900
+}
+
+// API Gateway - entry point
+APIGateway [label: "API Gateway"]
+
+// Authentication Service
+AuthService [label: "Auth Service"]
+
+// User Service
+UserService [label: "User Service"]
+
+// Order Service
+OrderService [label: "Order Service"]
+
+// Inventory Service
+InventoryService [label: "Inventory Service"]
+
+// Payment Service
+PaymentService [label: "Payment Service"]
+
+// Databases
+AuthDB [label: "Auth DB"]
+UserDB [label: "User DB"]
+OrderDB [label: "Order DB"]
+InventoryDB [label: "Inventory DB"]
+
+// Cache
+Redis [label: "Redis Cache"]
+
+// External Payment Gateway
+PaymentGateway [label: "Payment Gateway"]
+
+// Connections
+APIGateway -> AuthService
+APIGateway -> UserService
+APIGateway -> OrderService
+APIGateway -> InventoryService
+AuthService -> AuthDB
+UserService -> Redis
+UserService -> UserDB
+OrderService -> PaymentService
+OrderService -> InventoryService
+OrderService -> OrderDB
+InventoryService -> InventoryDB
+PaymentService -> PaymentGateway

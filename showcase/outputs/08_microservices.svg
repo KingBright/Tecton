@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="665.15955" y="282.6087" width="190" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="760.15955" y="307.6087" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Payment Gateway</text>
+<rect x="413.98602" y="141.30435" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="468.98602" y="166.30435" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User DB</text>
+<rect x="0" y="0" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">API Gateway</text>
+<rect x="275.0257" y="0" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="355.0257" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User Service</text>
+<rect x="0" y="289.86487" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="85" y="314.86487" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order Service</text>
+<rect x="0" y="438.85135" width="210" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="105" y="463.85135" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Inventory Service</text>
+<rect x="275.9907" y="289.86487" width="190" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="370.9907" y="314.86487" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Payment Service</text>
+<rect x="413.98602" y="0" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="468.98602" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Auth DB</text>
+<rect x="413.98602" y="282.6087" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="493.98602" y="307.6087" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Inventory DB</text>
+<rect x="0" y="143.40683" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="80" y="168.40683" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Auth Service</text>
+<rect x="413.98602" y="442.97482" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="488.98602" y="467.97482" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Redis Cache</text>
+<rect x="669.3491" y="0" width="120" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="729.3491" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order DB</text>
+<polyline points="75, 65 75, 75 75, 85 75, 95 75, 105 75, 115 75, 125 85, 125" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="165, 25 175, 25 185, 25 195, 25 205, 25 215, 25 225, 25 235, 25 245, 25 255, 25 265, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="75, 65 65, 65 55, 65 45, 65 35, 65 25, 65 15, 65 15, 75 15, 85 15, 95 15, 105 15, 115 15, 125 15, 135 15, 145 15, 155 15, 165 15, 175 15, 185 15, 195 15, 205 15, 215 15, 225 15, 235 15, 245 15, 255 15, 265 15, 275 25, 275 35, 275 45, 275 55, 275 65, 275 75, 275 85, 275" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="75, 65 85, 65 95, 65 105, 65 115, 65 125, 65 135, 65 145, 65 155, 65 165, 65 165, 75 165, 85 165, 95 165, 105 165, 115 165, 125 165, 135 165, 145 165, 155 165, 165 165, 175 165, 185 165, 195 165, 205 165, 215 165, 225 165, 235 165, 245 165, 255 165, 265 165, 275 165, 285 165, 295 165, 305 165, 315 165, 325 165, 335 165, 345 165, 355 165, 365 165, 375 165, 385 165, 395 165, 405 165, 415 165, 425 155, 425 145, 425 135, 425 125, 425 115, 425 105, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="175, 165 285, 165 285, 25 395, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="355, 65 345, 65 335, 65 325, 65 315, 65 305, 65 295, 65 285, 65 285, 75 285, 85 285, 95 285, 105 285, 115 285, 125 285, 135 285, 145 285, 155 285, 165 285, 175 285, 185 285, 195 285, 205 285, 215 285, 225 285, 235 285, 245 285, 255 285, 265 285, 275 285, 285 285, 295 285, 305 285, 315 285, 325 285, 335 285, 345 285, 355 285, 365 285, 375 285, 385 285, 395 285, 405 285, 415 285, 425 295, 425 305, 425 315, 425 325, 425 335, 425 345, 425 355, 425 365, 425 375, 425 385, 425 395, 425 405, 425 415, 425 425, 425 435, 425 445, 425 455, 425 465, 425 475, 425 485, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="355, 65 365, 65 375, 65 385, 65 395, 65 405, 65 415, 65 425, 65 435, 65 445, 65 455, 65 465, 65 465, 75 465, 85 465, 95 465, 105 465, 115 465, 125" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="185, 315 195, 315 205, 315 215, 315 225, 315 235, 315 245, 315 255, 315 265, 315" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="85, 355 85, 365 85, 375 85, 385 85, 395 85, 405 85, 415 85, 425 95, 425 105, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="185, 315 185, 305 185, 295 185, 285 185, 275 185, 265 185, 255 185, 245 185, 235 185, 225 185, 215 185, 205 185, 195 185, 185 185, 175 185, 165 185, 155 185, 145 185, 135 185, 125 185, 115 185, 105 185, 95 185, 85 185, 75 185, 65 185, 55 185, 45 195, 45 205, 45 215, 45 225, 45 235, 45 245, 45 255, 45 265, 45 275, 45 285, 45 295, 45 305, 45 315, 45 325, 45 335, 45 345, 45 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 515, 45 525, 45 535, 45 545, 45 555, 45 565, 45 575, 45 585, 45 595, 45 605, 45 615, 45 625, 45 635, 45 645, 45 655, 45 655, 35 655, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+<polyline points="225, 465 305, 465 305, 305 395, 305" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-11)" />
+<polyline points="485, 315 565, 315 565, 305 655, 305" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-12)" />
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="240" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="270" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">N1</text>
+<rect x="480" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="510" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">N3</text>
+<rect x="480" y="300" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="510" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">N4</text>
+<rect x="0" y="0" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="30" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">N0</text>
+<rect x="0" y="400" width="60" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="30" y="425" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">N2</text>
+<polyline points="75, 25 75, 15 315, 15 315, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="75, 25 75, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="75, 25 75, 15 555, 15 555, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="75, 25 75, 315 555, 315 555, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="315, 25 315, 15 75, 15 75, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="315, 25 315, 425 75, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="315, 25 315, 15 555, 15 555, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="315, 25 315, 315 555, 315 555, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="75, 425 75, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="75, 425 315, 425 315, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+<polyline points="75, 425 555, 425 555, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-11)" />
+<polyline points="75, 425 555, 425 555, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-12)" />
+<polyline points="555, 25 555, 15 75, 15 75, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-13)" />
+<polyline points="555, 25 555, 15 315, 15 315, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-14)" />
+<polyline points="555, 25 555, 425 75, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-15)" />
+<polyline points="555, 25 555, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-16)" />
+<polyline points="555, 325 555, 45 75, 45 75, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-17)" />
+<polyline points="555, 325 555, 45 315, 45 315, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-18)" />
+<polyline points="555, 325 555, 425 75, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-19)" />
+<polyline points="555, 325 555, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-20)" />
+</svg>

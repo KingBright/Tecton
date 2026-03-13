@@ -1,0 +1,15 @@
+[package]
+name = "tecton_dsl"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "DSL parser for Tecton architecture diagrams using Pest"
+
+[dependencies]
+tecton_types = { workspace = true }
+pest = "2.7"
+pest_derive = "2.7"
+thiserror = { workspace = true }
+serde = { workspace = true }

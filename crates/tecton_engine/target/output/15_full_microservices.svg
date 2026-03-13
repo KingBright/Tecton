@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="203" y="0" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="278" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">API Gateway</text>
+<rect x="0" y="0" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="85" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Load Balancer</text>
+<rect x="0" y="291" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="80" y="316" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User Service</text>
+<rect x="460" y="0" width="210" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="565" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Inventory Service</text>
+<rect x="227" y="291" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="312" y="316" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order Service</text>
+<rect x="460" y="230" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="505" y="255" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Redis</text>
+<rect x="460" y="403" width="140" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="530" y="428" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">PostgreSQL</text>
+<polyline points="85, 65 175, 65 175, 5 275, 5 275, -15 278, -15" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="278, 65 275, 65 275, 275 80, 275 80, 276" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="278, 65 275, 65 275, 275 312, 275 312, 276" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="278, -15 278, 5 415, 5 415, 65 565, 65" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="175, 316 175, 255 445, 255" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="412, 316 415, 316 415, 255 445, 255" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="565, 65 445, 65 445, 255" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="175, 316 175, 385 530, 385 530, 388" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="412, 316 415, 316 415, 315 535, 315 535, 385 530, 385 530, 388" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="565, 65 565, 385 530, 385 530, 388" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+</svg>

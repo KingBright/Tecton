@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="800" height="600" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="0" y="0" width="388.33618" height="600" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="0" y="0" width="388.33618" height="326.50177" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="0" y="0" width="249.64468" height="326.50177" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="249.64468" y="0" width="138.6915" height="326.50177" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" class="node" />
+<rect x="0" y="326.50177" width="388.33618" height="273.49823" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="0" y="326.50177" width="246.84937" height="273.49823" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="246.84937" y="326.50177" width="141.48682" height="273.49823" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" class="node" />
+<rect x="388.33618" y="0" width="411.66382" height="600" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="388.33618" y="0" width="411.66382" height="294" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="388.33618" y="0" width="277.24298" height="294" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="665.57916" y="0" width="134.42084" height="294" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1" class="node" />
+<rect x="388.33618" y="294" width="411.66382" height="306" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="388.33618" y="294" width="260.9895" height="306" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<rect x="388.33618" y="294" width="260.9895" height="151.42267" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1" class="node" />
+<rect x="388.33618" y="445.42267" width="260.9895" height="154.57733" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1" class="node" />
+<rect x="649.3257" y="294" width="150.67432" height="306" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+</svg>

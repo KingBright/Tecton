@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tecton Showcase - Example Gallery</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { opacity: 0.9; font-size: 1.1rem; }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .stat {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 2rem;
+        }
+        .example-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .example-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        .example-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+        }
+        .example-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+        .example-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .example-description {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        .example-svg {
+            background: #fff;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            border-bottom: 1px solid #eee;
+        }
+        .example-svg svg {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .example-footer {
+            padding: 1rem 1.5rem;
+            background: #fafafa;
+        }
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .feature-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.8rem;
+        }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+        .status.success { color: #4caf50; }
+        .status.error { color: #f44336; }
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #666;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .dsl-source {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            transition: background 0.2s;
+        }
+        .tab:hover {
+            background: #f5f5f5;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Tecton Showcase</h1>
+        <p>Structured Architecture Diagram Rendering Engine - Example Gallery</p>
+    </header>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Examples</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Generated</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">91.6ms</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+
+        <div class="examples-grid">
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">1</span>
+                    <span class="example-title">01 Simple Node</span>
+                    <span class="status success">✓ 3.31ms</span>
+                    <p class="example-description">单个节点 - 最基础的用例，展示基本渲染功能</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('01_simple_node', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('01_simple_node', 'dsl')">DSL Source</button>
+                </div>
+                <div id="01_simple_node-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="180" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="90" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Hello, Tecton!</text>
+</svg>                    </div>
+                </div>
+                <div id="01_simple_node-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 01: Simple Node
+// The most basic use case - a single node with a label
+
+config {
+    width: 400,
+    height: 300
+}
+
+Node [label: &quot;Hello, Tecton!&quot;]
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">基础节点</span>
+                        <span class="feature-tag">标签渲染</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">2</span>
+                    <span class="example-title">02 Row Layout</span>
+                    <span class="status success">✓ 0.55ms</span>
+                    <p class="example-description">水平布局 - 展示 Row 容器和 Flexbox 布局</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('02_row_layout', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('02_row_layout', 'dsl')">DSL Source</button>
+                </div>
+                <div id="02_row_layout-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="360" height="90" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="10" y="15" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Row</text>
+<rect x="20" y="20" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="65" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">First</text>
+<rect x="130" y="20" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="180" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Second</text>
+<rect x="250" y="20" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="295" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Third</text>
+</svg>                    </div>
+                </div>
+                <div id="02_row_layout-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 02: Row Layout
+// Demonstrates horizontal arrangement of nodes using Row container
+
+config {
+    width: 800,
+    height: 400
+}
+
+Row {
+    Node1 [label: &quot;First&quot;]
+    Node2 [label: &quot;Second&quot;]
+    Node3 [label: &quot;Third&quot;]
+}
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">Row 容器</span>
+                        <span class="feature-tag">水平排列</span>
+                        <span class="feature-tag">样式填充</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">3</span>
+                    <span class="example-title">03 Col Layout</span>
+                    <span class="status success">✓ 0.30ms</span>
+                    <p class="example-description">垂直布局 - 展示 Col 容器和 Flexbox 布局</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('03_col_layout', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('03_col_layout', 'dsl')">DSL Source</button>
+                </div>
+                <div id="03_col_layout-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="220" height="230" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="10" y="15" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Column</text>
+<rect x="20" y="20" width="180" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="110" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Header Section</text>
+<rect x="20" y="90" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="100" y="115" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Main Content</text>
+<rect x="20" y="160" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="70" y="185" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Footer</text>
+</svg>                    </div>
+                </div>
+                <div id="03_col_layout-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 03: Column Layout
+// Demonstrates vertical arrangement of nodes using Col container
+
+config {
+    width: 600,
+    height: 600
+}
+
+Col {
+    Header [label: &quot;Header Section&quot;]
+    Content [label: &quot;Main Content&quot;]
+    Footer [label: &quot;Footer&quot;]
+}
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">Col 容器</span>
+                        <span class="feature-tag">垂直排列</span>
+                        <span class="feature-tag">样式填充</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">4</span>
+                    <span class="example-title">04 Nested Containers</span>
+                    <span class="status success">✓ 0.49ms</span>
+                    <p class="example-description">嵌套容器 - 3层嵌套结构展示递归布局</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('04_nested_containers', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('04_nested_containers', 'dsl')">DSL Source</button>
+                </div>
+                <div id="04_nested_containers-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="0" y="0" width="560" height="310" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="10" y="15" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Row</text>
+<rect x="20" y="20" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="45" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Sidebar</text>
+<rect x="150" y="20" width="390" height="270" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="160" y="35" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Column</text>
+<rect x="170" y="40" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="220" y="65" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Header</text>
+<rect x="170" y="110" width="350" height="90" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="180" y="125" fill="#111827" font-size="14" text-anchor="start" class="label" dominant-baseline="middle">Row</text>
+<rect x="190" y="130" width="140" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="260" y="155" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Left Panel</text>
+<rect x="350" y="130" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="425" y="155" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Right Panel</text>
+<rect x="170" y="220" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="220" y="245" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Footer</text>
+</svg>                    </div>
+                </div>
+                <div id="04_nested_containers-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 04: Nested Containers
+// Demonstrates 3-layer nested structure with mixed Row and Col layouts
+
+config {
+    width: 900,
+    height: 700
+}
+
+Row {
+    Sidebar [label: &quot;Sidebar&quot;]
+
+    Col {
+        Header [label: &quot;Header&quot;]
+
+        Row {
+            Left [label: &quot;Left Panel&quot;]
+            Right [label: &quot;Right Panel&quot;]
+        }
+
+        Footer [label: &quot;Footer&quot;]
+    }
+}
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">多层嵌套</span>
+                        <span class="feature-tag">混合布局</span>
+                        <span class="feature-tag">递归计算</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">5</span>
+                    <span class="example-title">05 Basic Edges</span>
+                    <span class="status success">✓ 0.43ms</span>
+                    <p class="example-description">基础连线 - 点对点连接展示</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('05_basic_edges', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('05_basic_edges', 'dsl')">DSL Source</button>
+                </div>
+                <div id="05_basic_edges-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="400" y="0" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="475" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Target Node</text>
+<rect x="0" y="0" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Source Node</text>
+<polyline points="165, 25 175, 25 185, 25 195, 25 205, 25 215, 25 225, 25 235, 25 245, 25 255, 25 265, 25 275, 25 285, 25 295, 25 305, 25 315, 25 325, 25 335, 25 345, 25 355, 25 365, 25 375, 25 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+</svg>                    </div>
+                </div>
+                <div id="05_basic_edges-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 05: Basic Edges
+// Demonstrates point-to-point connections between nodes
+
+config {
+    width: 800,
+    height: 500
+}
+
+Source [label: &quot;Source Node&quot;]
+Target [label: &quot;Target Node&quot;]
+
+Source -&gt; Target
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">端口定义</span>
+                        <span class="feature-tag">正交布线</span>
+                        <span class="feature-tag">边渲染</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">6</span>
+                    <span class="example-title">06 Complex Flow</span>
+                    <span class="status success">✓ 1.64ms</span>
+                    <p class="example-description">复杂流程 - 多步骤业务流</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('06_complex_flow', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('06_complex_flow', 'dsl')">DSL Source</button>
+                </div>
+                <div id="06_complex_flow-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="458.27814" y="0" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="543.27814" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Error Handler</text>
+<rect x="0" y="0" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="45" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Start</text>
+<rect x="0" y="287.86127" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="65" y="312.86127" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Process A</text>
+<rect x="226.37836" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="276.37836" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Valid?</text>
+<rect x="229.13907" y="287.86127" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="294.13907" y="312.86127" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Process B</text>
+<rect x="458.27814" y="418.60464" width="70" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="493.27814" y="443.60464" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">End</text>
+<rect x="458.27814" y="227.90698" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="503.27814" y="252.90698" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Merge</text>
+<polyline points="105, 25 115, 25 125, 25 135, 25 145, 25 155, 25 165, 25 175, 25 185, 25 195, 25 205, 25 215, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="275, 65 275, 75 275, 85 275, 95 275, 105 275, 115 275, 125 275, 135 275, 145 275, 155 275, 165 275, 175 275, 185 275, 195 275, 205 275, 215 275, 225 275, 235 275, 245 275, 255 275, 265 275, 275 265, 275 255, 275 245, 275 235, 275 225, 275 215, 275 205, 275 195, 275 185, 275 175, 275 165, 275 155, 275 145, 275 135, 275 125, 275 115, 275 105, 275 95, 275 85, 275 75, 275 65, 275" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="345, 25 355, 25 365, 25 375, 25 385, 25 395, 25 405, 25 415, 25 425, 25 435, 25 445, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="145, 315 145, 305 145, 295 145, 285 145, 275 145, 265 145, 255 155, 255 165, 255 175, 255 185, 255 195, 255 205, 255 215, 255 225, 255 235, 255 245, 255 255, 255 265, 255 275, 255 285, 255 295, 255 305, 255 315, 255 325, 255 335, 255 345, 255 355, 255 365, 255 375, 255 385, 255 395, 255 405, 255 415, 255 425, 255 435, 255 445, 255" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="545, 65 545, 75 545, 85 545, 95 545, 105 545, 115 545, 125 545, 135 545, 145 545, 155 545, 165 545, 175 545, 185 545, 195 545, 205 545, 215 535, 215 525, 215 515, 215 505, 215" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="505, 295 505, 305 505, 315 505, 325 505, 335 505, 345 505, 355 505, 365 505, 375 505, 385 505, 395 505, 405 495, 405" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+</svg>                    </div>
+                </div>
+                <div id="06_complex_flow-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 06: Complex Flow
+// A multi-step business process with branching
+
+config {
+    width: 1000,
+    height: 600
+}
+
+// Input node
+Start [label: &quot;Start&quot;]
+
+// Decision point
+Decision [label: &quot;Valid?&quot;]
+
+// Processing nodes
+ProcessA [label: &quot;Process A&quot;]
+ProcessB [label: &quot;Process B&quot;]
+
+// Error handling
+ErrorHandler [label: &quot;Error Handler&quot;]
+
+// Merge point
+Merge [label: &quot;Merge&quot;]
+
+// Final output
+End [label: &quot;End&quot;]
+
+// Connections
+Start -&gt; Decision
+Decision -&gt; ProcessA
+Decision -&gt; ErrorHandler
+ProcessA -&gt; Merge
+ErrorHandler -&gt; Merge
+Merge -&gt; End
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">决策节点</span>
+                        <span class="feature-tag">多端口</span>
+                        <span class="feature-tag">流程分支</span>
+                        <span class="feature-tag">合并点</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">7</span>
+                    <span class="example-title">07 High Density</span>
+                    <span class="status success">✓ 61.79ms</span>
+                    <p class="example-description">高密度图 - 拥塞反馈演示</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('07_high_density', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('07_high_density', 'dsl')">DSL Source</button>
+                </div>
+                <div id="07_high_density-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="638.30786" y="300" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="693.30786" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 19</text>
+<rect x="0" y="199.52495" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="50" y="224.52495" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 3</text>
+<rect x="638.30786" y="0" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="693.30786" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 14</text>
+<rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="50" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 1</text>
+<rect x="118.73091" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="168.73091" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 2</text>
+<rect x="236.3364" y="299.2874" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="286.3364" y="324.2874" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 9</text>
+<rect x="638.30786" y="150" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="693.30786" y="175" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 15</text>
+<rect x="517.03876" y="300" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="572.03876" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 17</text>
+<rect x="395.76968" y="0" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="450.76968" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 11</text>
+<rect x="395.76968" y="500" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="450.76968" y="525" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 18</text>
+<rect x="236.3364" y="447.87482" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="291.3364" y="472.87482" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 10</text>
+<rect x="237.46182" y="149.6437" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="287.46182" y="174.6437" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 5</text>
+<rect x="395.76968" y="300" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="450.76968" y="325" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 16</text>
+<rect x="0" y="499.76248" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="50" y="524.76245" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 8</text>
+<rect x="0" y="299.2874" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="50" y="324.2874" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 6</text>
+<rect x="638.30786" y="450" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="693.30786" y="475" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 20</text>
+<rect x="395.76968" y="200" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="450.76968" y="225" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 13</text>
+<rect x="517.03876" y="0" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="572.03876" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 12</text>
+<rect x="118.1682" y="299.2874" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="168.1682" y="324.2874" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 7</text>
+<rect x="237.46182" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="287.46182" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Node 4</text>
+<polyline points="115, 25 115, 35 115, 45 115, 55 115, 65 115, 75 115, 85 115, 95 115, 105 115, 115 115, 125 115, 135 115, 145 115, 155 115, 165 115, 175 125, 175 135, 175 145, 175 155, 175 165, 175 175, 175 185, 175 195, 175 205, 175 215, 175 225, 175" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="55, 65 65, 65 75, 65 85, 65 95, 65 95, 75 95, 85 95, 95 95, 105 95, 115 95, 125 95, 135 95, 145 95, 155 95, 165 95, 175 95, 185 95, 195 95, 205 95, 215 95, 225 95, 235 95, 245 95, 255 95, 265 95, 275 95, 285 85, 285 75, 285 65, 285 55, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="55, 65 65, 65 75, 65 85, 65 95, 65 105, 65 115, 65 125, 65 135, 65 145, 65 155, 65 165, 65 165, 75 165, 85 165, 95 165, 105 165, 115 165, 125 165, 135 165, 145 165, 155 165, 165 165, 175 165, 185 165, 195 165, 205 165, 215 165, 225 165, 235 165, 245 165, 255 165, 265 165, 275 165, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="165, 65 175, 65 185, 65 195, 65 205, 65 215, 65 225, 65 235, 65 245, 65 255, 65 265, 65 275, 65 285, 65 285, 75 285, 85 285, 95 285, 105 285, 115 285, 125 285, 135" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="165, 65 155, 65 145, 65 135, 65 125, 65 115, 65 105, 65 95, 65 95, 75 95, 85 95, 95 95, 105 95, 115 95, 125 95, 135 95, 145 95, 155 95, 165 95, 175 95, 185 95, 195 95, 205 95, 215 95, 225 95, 235 95, 245 95, 255 95, 265 95, 275 95, 285 95, 295 95, 305 95, 315 95, 325 95, 335 95, 345 95, 355 95, 365 95, 375 95, 385 95, 395 95, 405 95, 415 95, 425 95, 435 95, 445 95, 455 95, 465 95, 475 95, 485 85, 485 75, 485 65, 485 55, 485" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="55, 265 55, 275 55, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="115, 225 125, 225 135, 225 145, 225 155, 225 165, 225 175, 225 185, 225 195, 225 205, 225 215, 225 225, 225 225, 235 225, 245 225, 255 225, 265 225, 275 225, 285 225, 295 225, 305 225, 315 225, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="285, 65 275, 65 265, 65 255, 65 245, 65 235, 65 225, 65 215, 65 205, 65 195, 65 185, 65 175, 65 165, 65 165, 75 165, 85 165, 95 165, 105 165, 115 165, 125 165, 135 165, 145 165, 155 165, 165 165, 175 165, 185 165, 195 165, 205 165, 215 165, 225 165, 235 165, 245 165, 255 165, 265 165, 275 165, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="285, 65 275, 65 265, 65 255, 65 245, 65 235, 65 225, 65 215, 65 205, 65 195, 65 185, 65 175, 65 165, 65 155, 65 145, 65 135, 65 125, 65 115, 65 105, 65 95, 65 95, 75 95, 85 95, 95 95, 105 95, 115 95, 125 95, 135 95, 145 95, 155 95, 165 95, 175 95, 185 95, 195 95, 205 95, 215 95, 225 95, 235 95, 245 95, 255 95, 265 95, 275 95, 285 95, 295 95, 305 95, 315 95, 325 95, 335 95, 345 95, 355 95, 365 95, 375 95, 385 95, 395 95, 405 95, 415 95, 425 95, 435 95, 445 95, 455 95, 465 95, 475 95, 485 85, 485 75, 485 65, 485 55, 485" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="285, 65 275, 65 265, 65 255, 65 245, 65 245, 75 245, 85 245, 95 245, 105 245, 115 245, 125 245, 135 245, 145 245, 155 245, 165 245, 175 245, 185 245, 195 245, 205 245, 215 245, 225 245, 235 245, 245 245, 255 245, 265 245, 275 245, 285 255, 285 265, 285 275, 285 285, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+<polyline points="285, 215 295, 215 305, 215 315, 215 325, 215 335, 215 335, 225 335, 235 335, 245 335, 255 335, 265 335, 275 335, 285 335, 295 335, 305 335, 315 335, 325 335, 335 335, 345 335, 355 335, 365 335, 375 335, 385 335, 395 335, 405 335, 415 335, 425 335, 435 325, 435 315, 435 305, 435 295, 435" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-11)" />
+<polyline points="355, 175 355, 165 355, 155 355, 145 355, 135 355, 125 355, 115 355, 105 355, 95 355, 85 355, 75 355, 65 355, 55 355, 45 355, 35 355, 25 365, 25 375, 25 385, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-12)" />
+<polyline points="115, 325 115, 335 115, 345 115, 355 115, 365 115, 375 115, 385 115, 395 115, 405 115, 415 115, 425 115, 435 115, 445 115, 455 115, 465 115, 475 125, 475 135, 475 145, 475 155, 475 165, 475 175, 475 185, 475 195, 475 205, 475 215, 475 225, 475" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-13)" />
+<polyline points="115, 325 115, 315 115, 305 115, 295 115, 285 115, 275 115, 265 115, 255 115, 245 115, 235 115, 225 115, 215 115, 205 115, 195 115, 185 115, 175 115, 165 115, 155 115, 145 115, 135 115, 125 115, 115 115, 105 115, 95 115, 85 115, 75 115, 65 115, 55 115, 45 125, 45 135, 45 145, 45 155, 45 165, 45 175, 45 185, 45 195, 45 205, 45 215, 45 225, 45 235, 45 245, 45 255, 45 265, 45 275, 45 285, 45 295, 45 305, 45 315, 45 325, 45 335, 45 345, 45 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 505, 35 505, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-14)" />
+<polyline points="165, 285 165, 275 165, 265 165, 255 165, 245 165, 235 165, 225 165, 215 165, 205 165, 195 165, 185 165, 175 165, 165 165, 155 165, 145 165, 135 165, 125 165, 115 165, 105 165, 95 165, 85 165, 75 165, 65 175, 65 185, 65 195, 65 205, 65 215, 65 225, 65 235, 65 245, 65 255, 65 265, 65 275, 65 285, 65 295, 65 305, 65 315, 65 325, 65 335, 65 345, 65 355, 65 365, 65 375, 65 385, 65 395, 65 405, 65 415, 65 425, 65 435, 65 445, 65 455, 65" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-15)" />
+<polyline points="235, 325 235, 315 235, 305 235, 295 235, 285 235, 275 235, 265 235, 255 235, 245 235, 235 235, 225 245, 225 255, 225 265, 225 275, 225 285, 225 295, 225 305, 225 315, 225 325, 225 335, 225 345, 225 355, 225 365, 225 375, 225 385, 225" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-16)" />
+<polyline points="115, 525 115, 515 115, 505 115, 495 115, 485 115, 475 115, 465 115, 455 115, 445 115, 435 115, 425 115, 415 115, 405 115, 395 115, 385 115, 375 115, 365 115, 355 115, 345 115, 335 115, 325 115, 315 115, 305 115, 295 115, 285 115, 275 115, 265 115, 255 115, 245 115, 235 115, 225 115, 215 115, 205 115, 195 115, 185 115, 175 115, 165 115, 155 115, 145 115, 135 115, 125 115, 115 115, 105 115, 95 115, 85 115, 75 115, 65 115, 55 115, 45 125, 45 135, 45 145, 45 155, 45 165, 45 175, 45 185, 45 195, 45 205, 45 215, 45 225, 45 235, 45 245, 45 255, 45 265, 45 275, 45 285, 45 295, 45 305, 45 315, 45 325, 45 335, 45 345, 45 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 505, 35 505, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-17)" />
+<polyline points="115, 525 115, 515 115, 505 115, 495 115, 485 115, 475 115, 465 115, 455 115, 445 115, 435 115, 425 115, 415 115, 405 115, 395 115, 385 115, 375 115, 365 115, 355 115, 345 115, 335 115, 325 115, 315 115, 305 115, 295 115, 285 115, 275 115, 265 115, 255 115, 245 115, 235 115, 225 115, 215 115, 205 115, 195 115, 185 115, 175 115, 165 115, 155 115, 145 115, 135 115, 125 115, 115 115, 105 115, 95 115, 85 115, 75 115, 65 115, 55 115, 45 125, 45 135, 45 145, 45 155, 45 165, 45 175, 45 185, 45 195, 45 205, 45 215, 45 225, 45 235, 45 245, 45 255, 45 265, 45 275, 45 285, 45 295, 45 305, 45 315, 45 325, 45 335, 45 345, 45 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 515, 45 525, 45 535, 45 545, 45 555, 45 565, 45 575, 45 585, 45 595, 45 605, 45 615, 45 625, 45 625, 35 625, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-18)" />
+<polyline points="355, 325 355, 315 355, 305 355, 295 355, 285 355, 275 355, 265 355, 255 355, 245 355, 235 355, 225 365, 225 375, 225 385, 225" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-19)" />
+<polyline points="355, 325 355, 315 355, 305 355, 295 355, 285 355, 275 355, 265 355, 255 355, 245 355, 235 355, 225 355, 215 355, 205 355, 195 355, 185 355, 175 355, 165 355, 155 355, 145 355, 135 355, 125 355, 115 355, 105 355, 95 355, 85 355, 75 355, 65 355, 55 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 515, 45 525, 45 535, 45 545, 45 555, 45 565, 45 575, 45 585, 45 595, 45 605, 45 615, 45 625, 45 625, 35 625, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-20)" />
+<polyline points="365, 475 365, 465 365, 455 365, 445 365, 435 365, 425 365, 415 365, 405 365, 395 365, 385 365, 375 365, 365 365, 355 365, 345 365, 335 365, 325 365, 315 365, 305 365, 295 365, 285 365, 275 365, 265 365, 255 365, 245 365, 235 365, 225 365, 215 365, 205 365, 195 365, 185 365, 175 375, 175 385, 175 395, 175 405, 175 415, 175 425, 175 435, 175 445, 175 455, 175 465, 175 475, 175 485, 175 495, 175 505, 175 515, 175 525, 175 535, 175 545, 175 555, 175 565, 175 575, 175 585, 175 595, 175 605, 175 615, 175 625, 175" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-21)" />
+<polyline points="525, 25 525, 35 525, 45 525, 55 525, 65 525, 75 525, 85 525, 95 525, 105 525, 115 525, 125 525, 135 525, 145 525, 155 525, 165 525, 175 535, 175 545, 175 555, 175 565, 175 575, 175 585, 175 595, 175 605, 175 615, 175 625, 175" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-22)" />
+<polyline points="575, 65 575, 75 575, 85 575, 95 575, 105 575, 115 575, 125 575, 135 575, 145 575, 155 575, 165 575, 175 575, 185 575, 195 575, 205 575, 215 575, 225 575, 235 575, 245 575, 255 575, 265 575, 275 575, 285 565, 285 555, 285 545, 285 535, 285 525, 285 515, 285 505, 285 495, 285 485, 285 475, 285 465, 285 455, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-23)" />
+<polyline points="455, 265 455, 275 455, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-24)" />
+<polyline points="695, 65 685, 65 675, 65 665, 65 655, 65 645, 65 635, 65 625, 65 615, 65 605, 65 595, 65 585, 65 575, 65 575, 75 575, 85 575, 95 575, 105 575, 115 575, 125 575, 135 575, 145 575, 155 575, 165 575, 175 575, 185 575, 195 575, 205 575, 215 575, 225 575, 235 575, 245 575, 255 575, 265 575, 275 575, 285" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-25)" />
+<polyline points="695, 215 685, 215 675, 215 665, 215 655, 215 645, 215 635, 215 625, 215 615, 215 605, 215 595, 215 585, 215 575, 215 565, 215 555, 215 545, 215 535, 215 525, 215 515, 215 505, 215 505, 225 505, 235 505, 245 505, 255 505, 265 505, 275 505, 285 505, 295 505, 305 505, 315 505, 325 505, 335 505, 345 505, 355 505, 365 505, 375 505, 385 505, 395 505, 405 505, 415 505, 425 505, 435 505, 445 505, 455 505, 465 505, 475 505, 485 495, 485 485, 485 475, 485 465, 485 455, 485" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-26)" />
+<polyline points="455, 365 455, 375 455, 385 455, 395 455, 405 455, 415 455, 425 455, 435 455, 445 455, 455 455, 465 455, 475 455, 485" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-27)" />
+<polyline points="645, 325 635, 325 625, 325" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-28)" />
+<polyline points="525, 525 535, 525 545, 525 555, 525 565, 525 575, 525 585, 525 595, 525 605, 525 615, 525 625, 525 625, 515 625, 505 625, 495 625, 485 625, 475" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-29)" />
+<polyline points="695, 365 695, 375 695, 385 695, 395 695, 405 695, 415 695, 425 695, 435" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-30)" />
+</svg>                    </div>
+                </div>
+                <div id="07_high_density-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 07: High Density
+// Demonstrates congestion detection and space expansion
+// 20 nodes with multiple connections to trigger congestion feedback
+
+config {
+    width: 1200,
+    height: 900
+}
+
+// Create a grid of nodes
+N1 [label: &quot;Node 1&quot;]
+N2 [label: &quot;Node 2&quot;]
+N3 [label: &quot;Node 3&quot;]
+N4 [label: &quot;Node 4&quot;]
+N5 [label: &quot;Node 5&quot;]
+N6 [label: &quot;Node 6&quot;]
+N7 [label: &quot;Node 7&quot;]
+N8 [label: &quot;Node 8&quot;]
+N9 [label: &quot;Node 9&quot;]
+N10 [label: &quot;Node 10&quot;]
+N11 [label: &quot;Node 11&quot;]
+N12 [label: &quot;Node 12&quot;]
+N13 [label: &quot;Node 13&quot;]
+N14 [label: &quot;Node 14&quot;]
+N15 [label: &quot;Node 15&quot;]
+N16 [label: &quot;Node 16&quot;]
+N17 [label: &quot;Node 17&quot;]
+N18 [label: &quot;Node 18&quot;]
+N19 [label: &quot;Node 19&quot;]
+N20 [label: &quot;Node 20&quot;]
+
+// Dense interconnections - this should trigger congestion feedback
+N1 -&gt; N5
+N1 -&gt; N6
+N1 -&gt; N7
+N2 -&gt; N5
+N2 -&gt; N8
+N3 -&gt; N6
+N3 -&gt; N9
+N4 -&gt; N7
+N4 -&gt; N8
+N4 -&gt; N9
+N5 -&gt; N10
+N5 -&gt; N11
+N6 -&gt; N10
+N6 -&gt; N12
+N7 -&gt; N11
+N7 -&gt; N13
+N8 -&gt; N12
+N8 -&gt; N14
+N9 -&gt; N13
+N9 -&gt; N14
+N10 -&gt; N15
+N11 -&gt; N15
+N12 -&gt; N16
+N13 -&gt; N16
+N14 -&gt; N17
+N15 -&gt; N18
+N16 -&gt; N18
+N17 -&gt; N19
+N18 -&gt; N20
+N19 -&gt; N20
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">20个节点</span>
+                        <span class="feature-tag">密集连接</span>
+                        <span class="feature-tag">拥塞检测</span>
+                        <span class="feature-tag">空间扩展</span>
+                    </div>
+                </div>
+            </div>
+            <div class="example-card">
+                <div class="example-header">
+                    <span class="example-number">8</span>
+                    <span class="example-title">08 Microservices</span>
+                    <span class="status success">✓ 23.12ms</span>
+                    <p class="example-description">微服务架构 - 真实场景案例</p>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('08_microservices', 'svg')">SVG Output</button>
+                    <button class="tab" onclick="showTab('08_microservices', 'dsl')">DSL Source</button>
+                </div>
+                <div id="08_microservices-svg" class="tab-content active">
+                    <div class="example-svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="665.15955" y="282.6087" width="190" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="760.15955" y="307.6087" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Payment Gateway</text>
+<rect x="413.98602" y="141.30435" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="468.98602" y="166.30435" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User DB</text>
+<rect x="0" y="0" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="75" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">API Gateway</text>
+<rect x="275.0257" y="0" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="355.0257" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">User Service</text>
+<rect x="0" y="289.86487" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="85" y="314.86487" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order Service</text>
+<rect x="0" y="438.85135" width="210" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="105" y="463.85135" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Inventory Service</text>
+<rect x="275.9907" y="289.86487" width="190" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="370.9907" y="314.86487" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Payment Service</text>
+<rect x="413.98602" y="0" width="110" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="468.98602" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Auth DB</text>
+<rect x="413.98602" y="282.6087" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="493.98602" y="307.6087" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Inventory DB</text>
+<rect x="0" y="143.40683" width="160" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="80" y="168.40683" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Auth Service</text>
+<rect x="413.98602" y="442.97482" width="150" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="488.98602" y="467.97482" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Redis Cache</text>
+<rect x="669.3491" y="0" width="120" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="729.3491" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Order DB</text>
+<polyline points="75, 65 75, 75 75, 85 75, 95 75, 105 75, 115 75, 125 85, 125" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="165, 25 175, 25 185, 25 195, 25 205, 25 215, 25 225, 25 235, 25 245, 25 255, 25 265, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="75, 65 65, 65 55, 65 45, 65 35, 65 25, 65 15, 65 15, 75 15, 85 15, 95 15, 105 15, 115 15, 125 15, 135 15, 145 15, 155 15, 165 15, 175 15, 185 15, 195 15, 205 15, 215 15, 225 15, 235 15, 245 15, 255 15, 265 15, 275 25, 275 35, 275 45, 275 55, 275 65, 275 75, 275 85, 275" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="75, 65 85, 65 95, 65 105, 65 115, 65 125, 65 135, 65 145, 65 155, 65 165, 65 165, 75 165, 85 165, 95 165, 105 165, 115 165, 125 165, 135 165, 145 165, 155 165, 165 165, 175 165, 185 165, 195 165, 205 165, 215 165, 225 165, 235 165, 245 165, 255 165, 265 165, 275 165, 285 165, 295 165, 305 165, 315 165, 325 165, 335 165, 345 165, 355 165, 365 165, 375 165, 385 165, 395 165, 405 165, 415 165, 425 155, 425 145, 425 135, 425 125, 425 115, 425 105, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="175, 165 285, 165 285, 25 395, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="355, 65 345, 65 335, 65 325, 65 315, 65 305, 65 295, 65 285, 65 285, 75 285, 85 285, 95 285, 105 285, 115 285, 125 285, 135 285, 145 285, 155 285, 165 285, 175 285, 185 285, 195 285, 205 285, 215 285, 225 285, 235 285, 245 285, 255 285, 265 285, 275 285, 285 285, 295 285, 305 285, 315 285, 325 285, 335 285, 345 285, 355 285, 365 285, 375 285, 385 285, 395 285, 405 285, 415 285, 425 295, 425 305, 425 315, 425 325, 425 335, 425 345, 425 355, 425 365, 425 375, 425 385, 425 395, 425 405, 425 415, 425 425, 425 435, 425 445, 425 455, 425 465, 425 475, 425 485, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+<polyline points="355, 65 365, 65 375, 65 385, 65 395, 65 405, 65 415, 65 425, 65 435, 65 445, 65 455, 65 465, 65 465, 75 465, 85 465, 95 465, 105 465, 115 465, 125" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-7)" />
+<polyline points="185, 315 195, 315 205, 315 215, 315 225, 315 235, 315 245, 315 255, 315 265, 315" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-8)" />
+<polyline points="85, 355 85, 365 85, 375 85, 385 85, 395 85, 405 85, 415 85, 425 95, 425 105, 425" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-9)" />
+<polyline points="185, 315 185, 305 185, 295 185, 285 185, 275 185, 265 185, 255 185, 245 185, 235 185, 225 185, 215 185, 205 185, 195 185, 185 185, 175 185, 165 185, 155 185, 145 185, 135 185, 125 185, 115 185, 105 185, 95 185, 85 185, 75 185, 65 185, 55 185, 45 195, 45 205, 45 215, 45 225, 45 235, 45 245, 45 255, 45 265, 45 275, 45 285, 45 295, 45 305, 45 315, 45 325, 45 335, 45 345, 45 355, 45 365, 45 375, 45 385, 45 395, 45 405, 45 415, 45 425, 45 435, 45 445, 45 455, 45 465, 45 475, 45 485, 45 495, 45 505, 45 515, 45 525, 45 535, 45 545, 45 555, 45 565, 45 575, 45 585, 45 595, 45 605, 45 615, 45 625, 45 635, 45 645, 45 655, 45 655, 35 655, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-10)" />
+<polyline points="225, 465 305, 465 305, 305 395, 305" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-11)" />
+<polyline points="485, 315 565, 315 565, 305 655, 305" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-12)" />
+</svg>                    </div>
+                </div>
+                <div id="08_microservices-dsl" class="tab-content">
+                    <pre class="dsl-source"><code>// Example 08: Microservices Architecture
+// A realistic microservices system diagram
+
+config {
+    width: 1400,
+    height: 900
+}
+
+// API Gateway - entry point
+APIGateway [label: &quot;API Gateway&quot;]
+
+// Authentication Service
+AuthService [label: &quot;Auth Service&quot;]
+
+// User Service
+UserService [label: &quot;User Service&quot;]
+
+// Order Service
+OrderService [label: &quot;Order Service&quot;]
+
+// Inventory Service
+InventoryService [label: &quot;Inventory Service&quot;]
+
+// Payment Service
+PaymentService [label: &quot;Payment Service&quot;]
+
+// Databases
+AuthDB [label: &quot;Auth DB&quot;]
+UserDB [label: &quot;User DB&quot;]
+OrderDB [label: &quot;Order DB&quot;]
+InventoryDB [label: &quot;Inventory DB&quot;]
+
+// Cache
+Redis [label: &quot;Redis Cache&quot;]
+
+// External Payment Gateway
+PaymentGateway [label: &quot;Payment Gateway&quot;]
+
+// Connections
+APIGateway -&gt; AuthService
+APIGateway -&gt; UserService
+APIGateway -&gt; OrderService
+APIGateway -&gt; InventoryService
+AuthService -&gt; AuthDB
+UserService -&gt; Redis
+UserService -&gt; UserDB
+OrderService -&gt; PaymentService
+OrderService -&gt; InventoryService
+OrderService -&gt; OrderDB
+InventoryService -&gt; InventoryDB
+PaymentService -&gt; PaymentGateway
+
+</code></pre>
+                </div>
+                <div class="example-footer">
+                    <div class="features">
+                        <span class="feature-tag">服务边界</span>
+                        <span class="feature-tag">数据库</span>
+                        <span class="feature-tag">缓存</span>
+                        <span class="feature-tag">外部服务</span>
+                        <span class="feature-tag">多种形状</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Generated by <a href="https://github.com/tecton/tecton">Tecton</a> - Structured Architecture Diagram Rendering Engine</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem; color: #999;">
+            Run <code>cargo run --bin showcase</code> to regenerate
+        </p>
+    </footer>
+
+    <script>
+        function showTab(exampleName, tabName) {
+            // Hide all tab contents for this example
+            const contents = document.querySelectorAll('[id^="' + exampleName + '-"]');
+            contents.forEach(c => c.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(exampleName + '-' + tabName).classList.add('active');
+
+            // Update tab buttons
+            const tabs = document.querySelectorAll('[onclick*="' + exampleName + '"]');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<style>
+.node { stroke-linejoin: round; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.label { font-family: system-ui, -apple-system, sans-serif; }
+</style>
+<rect x="0" y="0" width="800" height="600" fill="white" />
+<rect x="458.27814" y="0" width="170" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="543.27814" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Error Handler</text>
+<rect x="0" y="0" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="45" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Start</text>
+<rect x="0" y="287.86127" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="65" y="312.86127" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Process A</text>
+<rect x="226.37836" y="0" width="100" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="276.37836" y="25" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Valid?</text>
+<rect x="229.13907" y="287.86127" width="130" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="294.13907" y="312.86127" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Process B</text>
+<rect x="458.27814" y="418.60464" width="70" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="493.27814" y="443.60464" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">End</text>
+<rect x="458.27814" y="227.90698" width="90" height="50" fill="#ffffff" stroke="#d1d5db" stroke-width="1" class="node" />
+<text x="503.27814" y="252.90698" fill="#111827" font-size="14" text-anchor="middle" class="label" dominant-baseline="middle">Merge</text>
+<polyline points="105, 25 115, 25 125, 25 135, 25 145, 25 155, 25 165, 25 175, 25 185, 25 195, 25 205, 25 215, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-1)" />
+<polyline points="275, 65 275, 75 275, 85 275, 95 275, 105 275, 115 275, 125 275, 135 275, 145 275, 155 275, 165 275, 175 275, 185 275, 195 275, 205 275, 215 275, 225 275, 235 275, 245 275, 255 275, 265 275, 275 265, 275 255, 275 245, 275 235, 275 225, 275 215, 275 205, 275 195, 275 185, 275 175, 275 165, 275 155, 275 145, 275 135, 275 125, 275 115, 275 105, 275 95, 275 85, 275 75, 275 65, 275" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-2)" />
+<polyline points="345, 25 355, 25 365, 25 375, 25 385, 25 395, 25 405, 25 415, 25 425, 25 435, 25 445, 25" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-3)" />
+<polyline points="145, 315 145, 305 145, 295 145, 285 145, 275 145, 265 145, 255 155, 255 165, 255 175, 255 185, 255 195, 255 205, 255 215, 255 225, 255 235, 255 245, 255 255, 255 265, 255 275, 255 285, 255 295, 255 305, 255 315, 255 325, 255 335, 255 345, 255 355, 255 365, 255 375, 255 385, 255 395, 255 405, 255 415, 255 425, 255 435, 255 445, 255" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-4)" />
+<polyline points="545, 65 545, 75 545, 85 545, 95 545, 105 545, 115 545, 125 545, 135 545, 145 545, 155 545, 165 545, 175 545, 185 545, 195 545, 205 545, 215 535, 215 525, 215 515, 215 505, 215" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-5)" />
+<polyline points="505, 295 505, 305 505, 315 505, 325 505, 335 505, 345 505, 355 505, 365 505, 375 505, 385 505, 395 505, 405 495, 405" fill="none" stroke="#6b7280" stroke-width="1" class="edge" marker-end="url(#arrow-6)" />
+</svg>
