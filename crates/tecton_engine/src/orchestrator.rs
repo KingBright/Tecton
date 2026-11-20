@@ -703,6 +703,21 @@ impl Orchestrator {
         renderer.render(layout, self.routes.as_ref())
     }
 
+    /// Render the existing automatic geometry below a canvas-level SVG title.
+    pub fn render_with_title(&self, title: &str) -> Result<String> {
+        let layout = self
+            .computed_layout
+            .as_ref()
+            .ok_or_else(|| TectonError::layout("No layout computed"))?;
+        tecton_render::SvgBackend::render_automatic_with_title(
+            self.config.canvas_bounds.width(),
+            self.config.canvas_bounds.height(),
+            layout,
+            self.routes.as_ref(),
+            title,
+        )
+    }
+
     /// Save the rendered diagram to a file
     pub fn save(&self, path: &str) -> Result<()> {
         let svg = self.render()?;

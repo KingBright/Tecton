@@ -14,7 +14,16 @@ pub use dsl_parser::{CanvasSpec, DiagramDsl, DslParser, EdgeSpec, NodeSpec};
 pub use layout_graph::{LayoutGraph, LayoutNode, LayoutPort};
 pub use orchestrator::{Orchestrator, OrchestratorConfig};
 
-use tecton_types::error::Result;
+use serde::Deserialize;
+use tecton_types::error::{Result, TectonError};
+
+// Keep DiagramDsl's Rust API unchanged; text documents can add presentation metadata.
+#[derive(Deserialize)]
+struct AutomaticDocument {
+    #[serde(flatten)]
+    diagram: DiagramDsl,
+    title: Option<String>,
+}
 
 /// High-level API for rendering diagrams
 pub struct Tecton;
@@ -22,6 +31,10 @@ pub struct Tecton;
 impl Tecton {
     /// Render a diagram from a DSL specification
     pub fn render_dsl(dsl: &DiagramDsl) -> Result<String> {
+        Self::render_dsl_with_title(dsl, None)
+    }
+
+    fn render_dsl_with_title(dsl: &DiagramDsl, title: Option<&str>) -> Result<String> {
         let parser = DslParser::new();
         let graph = parser
             .to_layout_graph(dsl)
@@ -30,27 +43,24 @@ impl Tecton {
         let mut orchestrator = Orchestrator::new(graph);
         orchestrator.run()?;
 
-        orchestrator.render()
+        match title {
+            Some(title) if !title.is_empty() => orchestrator.render_with_title(title),
+            _ => orchestrator.render(),
+        }
     }
 
-    /// Render a diagram from JSON
+    /// Render a diagram from JSON, with an optional canvas-level title.
     pub fn render_json(json: &str) -> Result<String> {
-        let parser = DslParser::new();
-        let dsl = parser
-            .parse_json(json)
-            .map_err(|e| tecton_types::error::TectonError::parse(e))?;
-
-        Self::render_dsl(&dsl)
+        let document: AutomaticDocument =
+            serde_json::from_str(json).map_err(|e| TectonError::parse(e.to_string()))?;
+        Self::render_dsl_with_title(&document.diagram, document.title.as_deref())
     }
 
-    /// Render a diagram from YAML
+    /// Render a diagram from YAML, with an optional canvas-level title.
     pub fn render_yaml(yaml: &str) -> Result<String> {
-        let parser = DslParser::new();
-        let dsl = parser
-            .parse_yaml(yaml)
-            .map_err(|e| tecton_types::error::TectonError::parse(e))?;
-
-        Self::render_dsl(&dsl)
+        let document: AutomaticDocument =
+            serde_yaml::from_str(yaml).map_err(|e| TectonError::parse(e.to_string()))?;
+        Self::render_dsl_with_title(&document.diagram, document.title.as_deref())
     }
 
     /// Render a diagram from Tecton DSL (Pest-based)
@@ -71,6 +81,33 @@ impl Tecton {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn automatic_escaped_title_has_own_viewport_in_json_and_yaml() {
+        let plain = Tecton::render_json(r#"{"nodes":[{"label":"Card"}]}"#).unwrap();
+        let title = "标题 <&>";
+        let json =
+            Tecton::render_json(r#"{"title":"标题 <&>","nodes":[{"label":"Card"}]}"#).unwrap();
+        let yaml =
+            Tecton::render_yaml(&format!("title: '{title}'\nnodes:\n  - label: Card\n")).unwrap();
+        assert_eq!(json, yaml);
+        assert!(json.contains("<title>标题 &lt;&amp;&gt;</title>"));
+        assert!(json.contains(r#"viewBox="0 0 800 660""#));
+        assert!(json.contains(
+            r#"<svg x="0" y="60" width="800" height="600" viewBox="0 0 800 600" overflow="hidden">"#
+        ));
+        let node = plain
+            .lines()
+            .find(|line| line.contains("class=\"node\""))
+            .unwrap();
+        assert!(json.contains(node), "automatic layout coordinates changed");
+        let plain_yaml = Tecton::render_yaml("nodes:\n  - label: Card\n").unwrap();
+        assert_eq!(plain, plain_yaml);
+        assert_eq!(
+            plain,
+            Tecton::render_json(r#"{"title":"","nodes":[{"label":"Card"}]}"#).unwrap()
+        );
+    }
 
     #[test]
     fn automatic_card_preserves_ordered_label_rows() {

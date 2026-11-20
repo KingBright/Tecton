@@ -102,7 +102,7 @@ fn dash_ok(dash: Option<&[f32]>) -> bool {
     })
 }
 
-fn xml_text_safe(text: &str) -> bool {
+pub(crate) fn xml_text_safe(text: &str) -> bool {
     text.chars().all(|ch| {
         matches!(
             u32::from(ch),

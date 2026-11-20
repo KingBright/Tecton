@@ -13,7 +13,7 @@ use tecton_types::{
 
 use crate::{
     backend::Backend,
-    fixed_scene::{dash_css, paint, FixedNode, FixedScene, LineKind, TextRun},
+    fixed_scene::{dash_css, paint, xml_text_safe, FixedNode, FixedScene, LineKind, TextRun},
 };
 
 /// SVG rendering backend
@@ -104,6 +104,67 @@ impl SvgBackend {
         }
         svg.end_svg();
         Ok(svg.content)
+    }
+
+    /// Keep header geometry separate from the untouched automatic layout viewport.
+    pub fn render_automatic_with_title(
+        width: f32,
+        height: f32,
+        layout: &LayoutResult,
+        routes: Option<&RouteSet>,
+        title: &str,
+    ) -> Result<String> {
+        if title.is_empty() {
+            let mut svg = Self::new(width, height);
+            svg.render(layout, routes)?;
+            return Ok(svg.content);
+        }
+        if !xml_text_safe(title) {
+            return Err(TectonError::invalid_input("invalid SVG document title"));
+        }
+
+        const FONT: f32 = 22.0;
+        const ROW_HEIGHT: f32 = 28.0;
+        const PADDING: f32 = 16.0;
+        let (widest, count) = node_label_lines(title).fold((0, 0), |(widest, count), row| {
+            (widest.max(row.chars().count()), count + 1)
+        });
+        let header_height = 2.0 * PADDING + count as f32 * ROW_HEIGHT;
+        let header_width = 2.0 * PADDING + widest as f32 * FONT * 1.25;
+        let mut svg = Self::new(width.max(header_width), height + header_height);
+        svg.start_svg();
+        svg.render_background();
+        svg.content
+            .push_str(&format!("<title>{}</title>\n", escape_xml(title)));
+        for (index, row) in node_label_lines(title).enumerate() {
+            svg.render_text_row(
+                PADDING,
+                PADDING + (index as f32 + 0.5) * ROW_HEIGHT,
+                row,
+                &Color::BLACK,
+                FONT,
+                "start",
+                true,
+            );
+        }
+        // Explicitly clip the old viewport exactly as it was before adding the header.
+        // Existing graph geometry and out-of-canvas behavior do not change.
+        svg.content.push_str(&format!(
+            r#"<svg x="0" y="{header_height}" width="{width}" height="{height}" viewBox="0 0 {width} {height}" overflow="hidden">"#
+        ));
+        svg.content.push('\n');
+        svg.render_graph(layout, routes)?;
+        svg.content.push_str("</svg>\n");
+        svg.end_svg();
+        Ok(svg.content)
+    }
+
+    fn render_graph(&mut self, layout: &LayoutResult, routes: Option<&RouteSet>) -> Result<()> {
+        self.render_node_recursive(&layout.root)?;
+        if let Some(routes) = routes {
+            self.render_routes(routes)?;
+        }
+        Ok(())
     }
 
     fn render_background(&mut self) {
@@ -543,14 +604,7 @@ impl Backend for SvgBackend {
 
         self.render_background();
 
-        // Render all nodes
-        self.render_node_recursive(&layout.root)?;
-
-        // Render routes if provided
-        if let Some(route_set) = routes {
-            self.render_routes(route_set)?;
-        }
-
+        self.render_graph(layout, routes)?;
         self.end_svg();
         Ok(())
     }
