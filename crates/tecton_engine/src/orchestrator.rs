@@ -285,8 +285,8 @@ impl Orchestrator {
 
         if node.children.is_empty() {
             // Leaf node size estimation
-            let label_width = node.label.len() as f32 * 10.0 + 40.0;
-            let label_height = 50.0;
+            let (label_width, label_height) =
+                tecton_layout::layout_context::estimate_leaf_label_size(&node.label);
             style.size = taffy::Size {
                 width: taffy::Dimension::Length(label_width),
                 height: taffy::Dimension::Length(label_height),

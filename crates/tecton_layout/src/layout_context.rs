@@ -2,6 +2,31 @@ use std::collections::HashMap;
 
 use tecton_types::{geometry::Rect, id::NodeId, style::Style};
 
+/// Visual spacing of a row of the classic automatic SVG card label.
+pub const NODE_LABEL_LINE_HEIGHT: f32 = 17.0;
+
+/// Split newline-delimited card labels without dropping intentional blank rows.
+pub fn node_label_lines(label: &str) -> impl Iterator<Item = &str> {
+    label
+        .split('\n')
+        .map(|line| line.strip_suffix('\r').unwrap_or(line))
+}
+
+/// Estimate the classic card size from the widest row and number of rows.
+/// The original single-row estimate remains unchanged.
+pub fn estimate_leaf_label_size(label: &str) -> (f32, f32) {
+    if !label.contains('\n') {
+        return (label.len() as f32 * 10.0 + 40.0, 50.0);
+    }
+    let (longest, count) = node_label_lines(label).fold((0, 0), |(width, count), line| {
+        (width.max(line.len()), count + 1)
+    });
+    (
+        longest as f32 * 10.0 + 40.0,
+        50.0 + (count - 1) as f32 * NODE_LABEL_LINE_HEIGHT,
+    )
+}
+
 /// Result of a layout computation for a single node
 #[derive(Debug, Clone, PartialEq)]
 pub struct LayoutNode {

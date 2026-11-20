@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use tecton_layout::layout_context::{LayoutNode, LayoutResult};
+use tecton_layout::layout_context::{
+    node_label_lines, LayoutNode, LayoutResult, NODE_LABEL_LINE_HEIGHT,
+};
 use tecton_routing::route::{Route, RouteSet};
 use tecton_types::{
     edge::EdgeKind,
@@ -347,12 +349,31 @@ impl SvgBackend {
         font_size: f32,
         anchor: &str,
     ) {
+        self.render_text_row(x, y, text, color, font_size, anchor, false);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_text_row(
+        &mut self,
+        x: f32,
+        y: f32,
+        text: &str,
+        color: &Color,
+        font_size: f32,
+        anchor: &str,
+        preserve_space: bool,
+    ) {
         let fill = color_to_css(color);
         let escaped_text = escape_xml(text);
+        let whitespace = if preserve_space {
+            r#" xml:space="preserve""#
+        } else {
+            ""
+        };
 
         self.content.push_str(&format!(
-            r#"<text x="{}" y="{}" fill="{}" font-size="{}" text-anchor="{}" class="label" dominant-baseline="middle">{}</text>"#,
-            x, y, fill, font_size, anchor, escaped_text
+            r#"<text x="{}" y="{}" fill="{}" font-size="{}" text-anchor="{}" class="label" dominant-baseline="middle"{}>{}</text>"#,
+            x, y, fill, font_size, anchor, whitespace, escaped_text
         ));
         self.content.push('\n');
     }
@@ -448,14 +469,30 @@ impl SvgBackend {
                     rect.y() + 15.0
                 };
                 let anchor = if is_leaf { "middle" } else { "start" };
-                self.render_text(
-                    text_x,
-                    text_y,
-                    &node.label,
-                    &node.style.text_color,
-                    14.0,
-                    anchor,
-                );
+                if is_leaf && node.label.contains('\n') {
+                    let count = node_label_lines(&node.label).count();
+                    let first_y = text_y - (count - 1) as f32 * NODE_LABEL_LINE_HEIGHT / 2.0;
+                    for (index, line) in node_label_lines(&node.label).enumerate() {
+                        self.render_text_row(
+                            text_x,
+                            first_y + index as f32 * NODE_LABEL_LINE_HEIGHT,
+                            line,
+                            &node.style.text_color,
+                            14.0,
+                            anchor,
+                            true,
+                        );
+                    }
+                } else {
+                    self.render_text(
+                        text_x,
+                        text_y,
+                        &node.label,
+                        &node.style.text_color,
+                        14.0,
+                        anchor,
+                    );
+                }
             }
         }
 

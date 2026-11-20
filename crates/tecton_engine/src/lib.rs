@@ -73,6 +73,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn automatic_card_preserves_ordered_label_rows() {
+        let svg = Tecton::render_json(
+            r#"{
+          "nodes":[{"id":"a","label":"Header\r\n第二  行\n\n<detail>"}]
+        }"#,
+        )
+        .unwrap();
+        let rows: Vec<_> = svg
+            .lines()
+            .filter(|line| line.starts_with("<text "))
+            .collect();
+        assert_eq!(rows.len(), 4);
+        for (row, expected) in rows
+            .iter()
+            .zip(["Header", "第二  行", "", "&lt;detail&gt;"])
+        {
+            assert!(row.contains(r#"xml:space="preserve""#));
+            assert!(row.ends_with(&format!(">{expected}</text>")));
+        }
+        assert!(svg
+            .lines()
+            .any(|line| line.starts_with("<rect ") && line.contains(r#"height="101""#)));
+    }
+
+    #[test]
     fn automatic_route_markers_resolve_for_one_and_two_way_edges() {
         let fixture = r#"{
             "nodes": [
