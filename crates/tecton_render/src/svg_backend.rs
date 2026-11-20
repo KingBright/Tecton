@@ -702,15 +702,28 @@ impl SvgBackend {
     ) -> Result<()> {
         // Resolve all positions before writing any of the routes. Fixed scenes retain
         // their caller-supplied text positions and never enter this path.
-        let routes = routes
+        let routes: Vec<_> = routes
             .routes()
             .iter()
             .filter(|route| !route.segments.is_empty())
-            .map(|route| Ok((route, route_label_position(route, width, height)?)))
-            .collect::<Result<Vec<_>>>()?;
+            .collect();
+        let shafts: Vec<_> = routes.iter().map(|route| route_shafts(route)).collect();
+        let mut order: Vec<_> = (0..routes.len()).collect();
+        order.sort_by(|&a, &b| compare_label_owners(routes[a], routes[b]));
+        let mut occupied = Vec::new();
+        let mut labels = vec![None; routes.len()];
+        for index in order {
+            if let Some(label) =
+                route_label_position(routes[index], width, height, &occupied, &shafts, index)?
+            {
+                labels[index] = Some((label.x, label.y, label.font));
+                occupied.push(label);
+            }
+        }
         let first_new_def = self.definitions.len();
         let routes: Vec<_> = routes
             .into_iter()
+            .zip(labels)
             .map(|(route, label_position)| {
                 let orient = if route.edge_kind == EdgeKind::Bidirectional {
                     "auto-start-reverse"
@@ -764,10 +777,111 @@ impl Backend for SvgBackend {
     }
 }
 
+#[derive(Clone, Copy)]
+struct LabelBox {
+    x: f32,
+    y: f32,
+    half_x: f32,
+    half_y: f32,
+    font: f32,
+}
+
+impl LabelBox {
+    fn intersects(self, other: Self) -> bool {
+        (self.x - other.x).abs() < self.half_x + other.half_x + 2.0
+            && (self.y - other.y).abs() < self.half_y + other.half_y + 2.0
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Shaft {
+    a: [f32; 2],
+    b: [f32; 2],
+    radius: f32,
+}
+
+impl Shaft {
+    fn distance_squared(self, p: [f32; 2]) -> f32 {
+        let d = [self.b[0] - self.a[0], self.b[1] - self.a[1]];
+        let length = d[0] * d[0] + d[1] * d[1];
+        let t = if length > 0.0 {
+            (((p[0] - self.a[0]) * d[0] + (p[1] - self.a[1]) * d[1]) / length).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        (p[0] - self.a[0] - t * d[0]).powi(2) + (p[1] - self.a[1] - t * d[1]).powi(2)
+    }
+
+    fn intersects_label(self, label: LabelBox) -> bool {
+        // Slab test also covers caller-provided diagonal routes. Include stroke
+        // width and a small air gap, not merely the centerline.
+        let mut entrance: f32 = 0.0;
+        let mut exit: f32 = 1.0;
+        for (axis, center, extent) in [(0, label.x, label.half_x), (1, label.y, label.half_y)] {
+            let radius = extent + self.radius;
+            let delta = self.b[axis] - self.a[axis];
+            let (lo, hi) = (
+                center - radius - self.a[axis],
+                center + radius - self.a[axis],
+            );
+            if delta == 0.0 {
+                if lo > 0.0 || hi < 0.0 {
+                    return false;
+                }
+            } else {
+                let (t0, t1) = (lo / delta, hi / delta);
+                entrance = entrance.max(t0.min(t1));
+                exit = exit.min(t0.max(t1));
+                if entrance > exit {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+fn route_shafts(route: &Route) -> Vec<Shaft> {
+    route
+        .segments
+        .windows(2)
+        .map(|w| Shaft {
+            a: [w[0].x, w[0].y],
+            b: [w[1].x, w[1].y],
+            radius: route.edge_kind.stroke_width() * 0.5 + 1.0,
+        })
+        .collect()
+}
+
+fn compare_label_owners(a: &Route, b: &Route) -> std::cmp::Ordering {
+    // Establish a visible/document-independent order even if runtime IDs were
+    // allocated differently. The stable EdgeId breaks exact visual ties.
+    for (p, q) in a.segments.iter().zip(&b.segments) {
+        let cmp = p.y.total_cmp(&q.y).then_with(|| p.x.total_cmp(&q.x));
+        if !cmp.is_eq() {
+            return cmp;
+        }
+    }
+    let rgba = |c: Color| [c.r, c.g, c.b, c.a];
+    a.segments
+        .len()
+        .cmp(&b.segments.len())
+        .then_with(|| a.label.cmp(&b.label))
+        .then_with(|| rgba(a.edge_color).cmp(&rgba(b.edge_color)))
+        .then_with(|| a.edge_id.cmp(&b.edge_id))
+}
+
 /// Choose a nearby readable position without modifying the route.
 /// SVG fonts are selected by the viewer, so reserve a conservative em envelope,
 /// including for CJK, rather than promising a font-specific ink measurement.
-fn route_label_position(route: &Route, width: f32, height: f32) -> Result<Option<(f32, f32, f32)>> {
+fn route_label_position(
+    route: &Route,
+    width: f32,
+    height: f32,
+    occupied: &[LabelBox],
+    shafts: &[Vec<Shaft>],
+    owner: usize,
+) -> Result<Option<LabelBox>> {
     let Some(label) = route
         .label
         .as_deref()
@@ -795,35 +909,82 @@ fn route_label_position(route: &Route, width: f32, height: f32) -> Result<Option
     // Protect against rounding up when the em envelope exactly fills the viewport.
     let right = (width - inset_x).max(inset_x);
     let bottom = (height - inset_y).max(inset_y);
-    let mut best = None::<(f32, f32, f32, f32)>;
+
+    let mut best = None::<(bool, f32, f32, LabelBox)>;
     for pair in route.segments.windows(2) {
         let (a, b) = (&pair[0], &pair[1]);
         let (dx, dy) = ((b.x - a.x).abs(), (b.y - a.y).abs());
-        let (mid_x, mid_y) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
         let (horizontal, len) = (dx >= dy, dx + dy);
-        let offsets = if horizontal {
-            [(0.0, -font - 2.0), (0.0, font + 2.0)]
-        } else {
-            [
-                (font * ems / 2.0 + 6.0, 0.0),
-                (-font * ems / 2.0 - 6.0, 0.0),
-            ]
-        };
-        for (ox, oy) in offsets {
-            let (raw_x, raw_y) = (mid_x + ox, mid_y + oy);
-            let (x, y) = (raw_x.clamp(inset_x, right), raw_y.clamp(inset_y, bottom));
-            let score = (raw_x - x).abs() + (raw_y - y).abs() + if horizontal { 0.0 } else { font };
-            if !score.is_finite() {
-                continue;
-            }
-            if best.map_or(true, |(old_score, old_len, _, _)| {
-                score < old_score || (score == old_score && len > old_len)
-            }) {
-                best = Some((score, len, x, y));
+        for (fraction, slide_cost) in [
+            (0.5, 0.0),
+            (0.25, font / 4.0),
+            (0.75, font / 4.0),
+            (0.1, font / 2.0),
+            (0.9, font / 2.0),
+        ] {
+            let (mid_x, mid_y) = (a.x + (b.x - a.x) * fraction, a.y + (b.y - a.y) * fraction);
+            for (spacing, adjust_cost) in [(font + 2.0, 0.0), (font + 1.0, 1.0)] {
+                let offsets = if horizontal {
+                    [(0.0, -spacing), (0.0, spacing)]
+                } else {
+                    [
+                        (font * ems / 2.0 + 6.0, 0.0),
+                        (-font * ems / 2.0 - 6.0, 0.0),
+                    ]
+                };
+                for (ox, oy) in offsets {
+                    let (raw_x, raw_y) = (mid_x + ox, mid_y + oy);
+                    let (x, y) = (raw_x.clamp(inset_x, right), raw_y.clamp(inset_y, bottom));
+                    let rect = LabelBox {
+                        x,
+                        y,
+                        half_x: font * ems / 2.0,
+                        half_y: font * 0.75,
+                        font,
+                    };
+                    if occupied.iter().any(|other| rect.intersects(*other))
+                        || shafts
+                            .iter()
+                            .flatten()
+                            .any(|shaft| shaft.intersects_label(rect))
+                    {
+                        continue;
+                    }
+                    let score = (raw_x - x).abs()
+                        + (raw_y - y).abs()
+                        + slide_cost
+                        + adjust_cost
+                        + if horizontal { 0.0 } else { font };
+                    if !score.is_finite() {
+                        continue;
+                    }
+                    let closest = |list: &[Shaft]| {
+                        list.iter()
+                            .map(|shaft| shaft.distance_squared([x, y]))
+                            .fold(f32::INFINITY, f32::min)
+                    };
+                    let own_distance = closest(&shafts[owner]);
+                    let nearest_owner = shafts
+                        .iter()
+                        .enumerate()
+                        .all(|(index, other)| index == owner || own_distance < closest(other));
+                    // Prefer the label's actual owner over a visually ambiguous
+                    // tie. If none fit, allow adjacent overlapping shafts to
+                    // retain their labels but never paint on them.
+                    if best.map_or(true, |(old_owner, old_score, old_len, _)| {
+                        nearest_owner > old_owner
+                            || (nearest_owner == old_owner
+                                && (score < old_score || (score == old_score && len > old_len)))
+                    }) {
+                        best = Some((nearest_owner, score, len, rect));
+                    }
+                }
             }
         }
     }
-    Ok(best.map(|(_, _, x, y)| (x, y, font)))
+    best.map(|(_, _, _, label)| Some(label)).ok_or_else(|| {
+        TectonError::routing(format!("no clear position for label on {}", route.edge_id))
+    })
 }
 
 fn paint_to_css(value: &str) -> Result<String> {
@@ -1032,6 +1193,103 @@ mod tests {
         backend.render(&layout, None).unwrap();
         let no_routes = backend.output().unwrap();
         assert!(!no_routes.contains("<polyline") && !no_routes.contains("<marker"));
+    }
+
+    #[test]
+    fn parallel_route_labels_do_not_overlap_or_switch_owners() {
+        use tecton_types::{
+            edge::RouteSegment,
+            id::{EdgeId, PortId},
+        };
+        let rect = Rect::new(0.0, 0.0, 800.0, 600.0);
+        let layout =
+            LayoutResult::new(LayoutNode::new(NodeId::new(), rect, Style::default()), rect);
+        for reverse in [false, true] {
+            let mut specs = [
+                (24.0, "ALPHA", Color::new(22, 94, 151)),
+                (52.0, "BRAVO", Color::new(166, 67, 20)),
+            ];
+            if reverse {
+                specs.reverse();
+            }
+            for crossing_shaft in [false, true] {
+                let mut routes = RouteSet::new();
+                for (y, label, color) in specs {
+                    let route = Route::from_segments(
+                        EdgeId::new(),
+                        PortId::new(),
+                        PortId::new(),
+                        vec![
+                            RouteSegment::move_to(100.0, y),
+                            RouteSegment::line_to(300.0, y),
+                        ],
+                    );
+                    routes.add_route(route.with_label(label).with_edge_color(color));
+                }
+                if crossing_shaft {
+                    routes.add_route(Route::from_segments(
+                        EdgeId::new(),
+                        PortId::new(),
+                        PortId::new(),
+                        vec![
+                            RouteSegment::move_to(200.0, 10.0),
+                            RouteSegment::line_to(200.0, 100.0),
+                        ],
+                    ));
+                }
+                let mut backend = SvgBackend::new(800.0, 600.0);
+                backend.render(&layout, Some(&routes)).unwrap();
+                let plain = backend.output().unwrap();
+                let decorated = SvgBackend::render_automatic_with_header(
+                    800.0,
+                    600.0,
+                    &layout,
+                    Some(&routes),
+                    "Parallel signals",
+                    &[LegendEntry {
+                        text: "Signal direction".into(),
+                        color: "#535d6e".into(),
+                        width: 1.5,
+                        dash: None,
+                        arrow_start: false,
+                        arrow_end: true,
+                    }],
+                )
+                .unwrap();
+                let edge_label = |svg: &str, text| {
+                    svg.lines()
+                        .find(|line| line.ends_with(&format!(">{text}</text>")))
+                        .unwrap()
+                        .to_owned()
+                };
+                for ((label, color), y, expected) in [
+                    (("ALPHA", "#165e97"), 24.0, 37.0),
+                    (("BRAVO", "#a64314"), 52.0, 66.0),
+                ] {
+                    let row = edge_label(&plain, label);
+                    assert_eq!(row, edge_label(&decorated, label));
+                    assert!(row.contains(&format!("fill=\"{color}\"")));
+                    let number = |attr| {
+                        row.split_once(&format!(" {attr}=\""))
+                            .unwrap()
+                            .1
+                            .split('"')
+                            .next()
+                            .unwrap()
+                            .parse::<f32>()
+                            .unwrap()
+                    };
+                    let (x, label_y) = (number("x"), number("y"));
+                    assert!((label_y - y).abs() < (label_y - (76.0 - y)).abs());
+                    if crossing_shaft {
+                        assert!((x - 200.0).abs() > 39.0, "clearance around a foreign shaft");
+                    } else {
+                        assert_eq!(x, 200.0);
+                        assert_eq!(label_y, expected);
+                    }
+                }
+            }
+        }
     }
 
     #[test]
