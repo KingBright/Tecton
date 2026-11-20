@@ -14,6 +14,7 @@ use tecton_types::{
 use crate::{
     backend::Backend,
     fixed_scene::{dash_css, paint, xml_text_safe, FixedNode, FixedScene, LineKind, TextRun},
+    legend::LegendEntry,
 };
 
 /// SVG rendering backend
@@ -114,7 +115,19 @@ impl SvgBackend {
         routes: Option<&RouteSet>,
         title: &str,
     ) -> Result<String> {
-        if title.is_empty() {
+        Self::render_automatic_with_header(width, height, layout, routes, title, &[])
+    }
+
+    /// Render optional, geometry-free document metadata above the graph viewport.
+    pub fn render_automatic_with_header(
+        width: f32,
+        height: f32,
+        layout: &LayoutResult,
+        routes: Option<&RouteSet>,
+        title: &str,
+        legend: &[LegendEntry],
+    ) -> Result<String> {
+        if title.is_empty() && legend.is_empty() {
             let mut svg = Self::new(width, height);
             svg.render(layout, routes)?;
             return Ok(svg.content);
@@ -126,26 +139,109 @@ impl SvgBackend {
         const FONT: f32 = 22.0;
         const ROW_HEIGHT: f32 = 28.0;
         const PADDING: f32 = 16.0;
-        let (widest, count) = node_label_lines(title).fold((0, 0), |(widest, count), row| {
-            (widest.max(row.chars().count()), count + 1)
-        });
-        let header_height = 2.0 * PADDING + count as f32 * ROW_HEIGHT;
-        let header_width = 2.0 * PADDING + widest as f32 * FONT * 1.25;
-        let mut svg = Self::new(width.max(header_width), height + header_height);
+        for entry in legend {
+            entry.validate()?;
+        }
+        let (widest, title_count) = if title.is_empty() {
+            (0, 0)
+        } else {
+            node_label_lines(title).fold((0, 0), |(widest, count), row| {
+                (widest.max(row.chars().count()), count + 1)
+            })
+        };
+        let legend_item_width = legend
+            .iter()
+            .map(LegendEntry::item_width)
+            .fold(0.0, f32::max);
+        let header_width = (2.0 * PADDING + widest as f32 * FONT * 1.25)
+            .max(2.0 * PADDING + legend_item_width)
+            .max(width);
+        let row_height = legend
+            .iter()
+            .map(|item| item.width * 6.0 + 12.0)
+            .fold(26.0, f32::max);
+        let gap_after_title = if title_count > 0 && !legend.is_empty() {
+            6.0
+        } else {
+            0.0
+        };
+        let legend_top = PADDING + title_count as f32 * ROW_HEIGHT + gap_after_title;
+        let mut x = PADDING;
+        let mut row = 0;
+        let mut positions = Vec::with_capacity(legend.len());
+        for entry in legend {
+            let item_width = entry.item_width();
+            if x > PADDING && x + item_width > header_width - PADDING {
+                x = PADDING;
+                row += 1;
+            }
+            positions.push((x, legend_top + (row as f32 + 0.5) * row_height));
+            x += item_width + 22.0;
+        }
+        let legend_height = if legend.is_empty() {
+            0.0
+        } else {
+            (row + 1) as f32 * row_height
+        };
+        let header_height = legend_top + legend_height + PADDING;
+        // A stable header height on the default 800→720 preview pixel grid.
+        let header_height = if legend.is_empty() {
+            header_height
+        } else {
+            (header_height / 10.0).ceil() * 10.0
+        };
+        let mut svg = Self::new(header_width, height + header_height);
+        let mut markers = Vec::with_capacity(legend.len());
+        for entry in legend {
+            markers.push(if entry.arrow_start || entry.arrow_end {
+                paint(&entry.color)?.map(|color| {
+                    svg.add_arrow_marker_with_orientation(&color, "auto-start-reverse")
+                })
+            } else {
+                None
+            });
+        }
         svg.start_svg();
         svg.render_background();
-        svg.content
-            .push_str(&format!("<title>{}</title>\n", escape_xml(title)));
-        for (index, row) in node_label_lines(title).enumerate() {
-            svg.render_text_row(
-                PADDING,
-                PADDING + (index as f32 + 0.5) * ROW_HEIGHT,
-                row,
-                &Color::BLACK,
-                FONT,
-                "start",
-                true,
-            );
+        if !title.is_empty() {
+            svg.content
+                .push_str(&format!("<title>{}</title>\n", escape_xml(title)));
+            for (index, row) in node_label_lines(title).enumerate() {
+                svg.render_text_row(
+                    PADDING,
+                    PADDING + (index as f32 + 0.5) * ROW_HEIGHT,
+                    row,
+                    &Color::BLACK,
+                    FONT,
+                    "start",
+                    true,
+                );
+            }
+        }
+        if !legend.is_empty() {
+            svg.content.push_str("<g class=\"legend\">\n");
+            for ((entry, &(x, y)), marker) in legend.iter().zip(&positions).zip(&markers) {
+                let end = x + entry.sample_length();
+                let dash = entry.dash.as_deref().map(dash_css);
+                svg.render_styled_polyline(
+                    &[(x, y), (end, y)],
+                    &paint_to_css(&entry.color)?,
+                    entry.width,
+                    dash.as_deref(),
+                    marker.as_deref().filter(|_| entry.arrow_start),
+                    marker.as_deref().filter(|_| entry.arrow_end),
+                );
+                svg.render_text_row(
+                    end + 10.0,
+                    y,
+                    &entry.text,
+                    &Color::BLACK,
+                    LegendEntry::FONT_SIZE,
+                    "start",
+                    true,
+                );
+            }
+            svg.content.push_str("</g>\n");
         }
         // Explicitly clip the old viewport exactly as it was before adding the header.
         // Existing graph geometry and out-of-canvas behavior do not change.

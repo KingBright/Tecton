@@ -718,6 +718,26 @@ impl Orchestrator {
         )
     }
 
+    /// Render optional legend samples alongside the document title.
+    pub fn render_with_header(
+        &self,
+        title: &str,
+        legend: &[tecton_render::LegendEntry],
+    ) -> Result<String> {
+        let layout = self
+            .computed_layout
+            .as_ref()
+            .ok_or_else(|| TectonError::layout("No layout computed"))?;
+        tecton_render::SvgBackend::render_automatic_with_header(
+            self.config.canvas_bounds.width(),
+            self.config.canvas_bounds.height(),
+            layout,
+            self.routes.as_ref(),
+            title,
+            legend,
+        )
+    }
+
     /// Save the rendered diagram to a file
     pub fn save(&self, path: &str) -> Result<()> {
         let svg = self.render()?;

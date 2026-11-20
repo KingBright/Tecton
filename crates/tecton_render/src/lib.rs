@@ -7,9 +7,11 @@
 
 pub mod backend;
 pub mod fixed_scene;
+mod legend;
 pub mod svg_backend;
 
 pub use backend::{Backend, DebugBackend};
+pub use legend::LegendEntry;
 pub use svg_backend::SvgBackend;
 
 use tecton_layout::layout_context::LayoutResult;

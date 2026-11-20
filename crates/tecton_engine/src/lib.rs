@@ -23,6 +23,8 @@ struct AutomaticDocument {
     #[serde(flatten)]
     diagram: DiagramDsl,
     title: Option<String>,
+    #[serde(default)]
+    legend: Vec<tecton_render::LegendEntry>,
 }
 
 /// High-level API for rendering diagrams
@@ -31,10 +33,14 @@ pub struct Tecton;
 impl Tecton {
     /// Render a diagram from a DSL specification
     pub fn render_dsl(dsl: &DiagramDsl) -> Result<String> {
-        Self::render_dsl_with_title(dsl, None)
+        Self::render_dsl_with_header(dsl, None, &[])
     }
 
-    fn render_dsl_with_title(dsl: &DiagramDsl, title: Option<&str>) -> Result<String> {
+    fn render_dsl_with_header(
+        dsl: &DiagramDsl,
+        title: Option<&str>,
+        legend: &[tecton_render::LegendEntry],
+    ) -> Result<String> {
         let parser = DslParser::new();
         let graph = parser
             .to_layout_graph(dsl)
@@ -43,24 +49,34 @@ impl Tecton {
         let mut orchestrator = Orchestrator::new(graph);
         orchestrator.run()?;
 
-        match title {
-            Some(title) if !title.is_empty() => orchestrator.render_with_title(title),
-            _ => orchestrator.render(),
+        let title = title.unwrap_or_default();
+        if title.is_empty() && legend.is_empty() {
+            orchestrator.render()
+        } else {
+            orchestrator.render_with_header(title, legend)
         }
     }
 
-    /// Render a diagram from JSON, with an optional canvas-level title.
+    /// Render a diagram from JSON, with an optional title and legend.
     pub fn render_json(json: &str) -> Result<String> {
         let document: AutomaticDocument =
             serde_json::from_str(json).map_err(|e| TectonError::parse(e.to_string()))?;
-        Self::render_dsl_with_title(&document.diagram, document.title.as_deref())
+        Self::render_dsl_with_header(
+            &document.diagram,
+            document.title.as_deref(),
+            &document.legend,
+        )
     }
 
-    /// Render a diagram from YAML, with an optional canvas-level title.
+    /// Render a diagram from YAML, with an optional title and legend.
     pub fn render_yaml(yaml: &str) -> Result<String> {
         let document: AutomaticDocument =
             serde_yaml::from_str(yaml).map_err(|e| TectonError::parse(e.to_string()))?;
-        Self::render_dsl_with_title(&document.diagram, document.title.as_deref())
+        Self::render_dsl_with_header(
+            &document.diagram,
+            document.title.as_deref(),
+            &document.legend,
+        )
     }
 
     /// Render a diagram from Tecton DSL (Pest-based)
@@ -107,6 +123,91 @@ mod tests {
             plain,
             Tecton::render_json(r#"{"title":"","nodes":[{"label":"Card"}]}"#).unwrap()
         );
+    }
+
+    #[test]
+    fn automatic_legend_uses_styled_ordered_samples_independent_of_routes() {
+        let svg = Tecton::render_json(
+            r##"{
+             "title":"Example",
+             "legend":[
+                {"text":"普通","color":"#123456","arrow_end":true},
+                {"text":"虚线","color":"#a33555","width":3,"dash":[5,2],"arrow_end":true},
+                {"text":"双向","color":"#114422","arrow_start":true,"arrow_end":true},
+                {"text":"参考 <&>","color":"#666666"}],
+             "nodes":[{"id":"a","label":"A","ports":[{"name":"out","side":"east"}]},
+                      {"id":"b","label":"B","ports":[{"name":"in","side":"west"}]}],
+             "edges":[{"from":"a:out","to":"b:in"}]
+        }"##,
+        )
+        .unwrap();
+        let legend = svg
+            .split(r#"<g class="legend">"#)
+            .nth(1)
+            .unwrap()
+            .split("</g>")
+            .next()
+            .unwrap();
+        let marks: Vec<_> = legend
+            .lines()
+            .filter(|line| line.starts_with("<polyline"))
+            .collect();
+        assert_eq!(marks.len(), 4);
+        assert!(marks[1].contains(r#"stroke-width="3" class="edge" stroke-dasharray="5 2""#));
+        assert!(marks[2].contains(r#"marker-start="url(#arrow-3)" marker-end="url(#arrow-3)""#));
+        assert!(!marks[3].contains("marker-"));
+        for (row, expected) in legend
+            .lines()
+            .filter(|line| line.starts_with("<text"))
+            .zip(["普通", "虚线", "双向", "参考 &lt;&amp;&gt;"])
+        {
+            assert!(row.ends_with(&format!(">{expected}</text>")));
+        }
+        assert!(
+            svg.contains(r#"<marker id="arrow-4""#),
+            "body route uses its own marker"
+        );
+        let plain = Tecton::render_json(r#"{"nodes":[{"label":"A"}]}"#).unwrap();
+        assert_eq!(
+            plain,
+            Tecton::render_json(r#"{"nodes":[{"label":"A"}],"legend":[]}"#).unwrap()
+        );
+        assert!(Tecton::render_json(
+            r##"{"legend":[{"text":"bad","color":"#111111","dash":[0]}]}"##
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn automatic_legend_wraps_inside_header_without_title() {
+        let yaml = r##"
+nodes:
+  - label: Card
+legend:
+  - text: A longer entry occupying much of the available header width
+    color: '#123456'
+    arrow_end: true
+  - text: Another entry that must appear on the following legend row
+    color: '#345678'
+    arrow_end: true
+"##;
+        let svg = Tecton::render_yaml(yaml).unwrap();
+        assert!(!svg.contains("<title>"));
+        let legend = svg
+            .split(r#"<g class="legend">"#)
+            .nth(1)
+            .unwrap()
+            .split("</g>")
+            .next()
+            .unwrap();
+        let rows: Vec<_> = legend
+            .lines()
+            .filter(|line| line.starts_with("<text"))
+            .collect();
+        assert_eq!(rows.len(), 2);
+        assert!(rows[0].contains(r#"x="74" y="29""#));
+        assert!(rows[1].contains(r#"x="74" y="55""#));
+        assert!(svg.contains(r#"<svg x="0" y="90""#));
     }
 
     #[test]
