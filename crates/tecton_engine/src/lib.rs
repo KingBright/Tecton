@@ -8,6 +8,7 @@
 pub mod dsl_parser;
 pub mod layout_graph;
 pub mod named_layout;
+mod named_packing;
 pub mod orchestrator;
 pub mod tecton_dsl_converter;
 
@@ -349,6 +350,82 @@ legend:
             .unwrap()
             .to_string()
             .contains("outside the straight rectangular side"));
+    }
+
+    #[test]
+    fn named_automatic_packing_keeps_multiple_cjk_groups_and_routes_in_bounds() {
+        let groups: Vec<_> = (0..3).map(|g| serde_json::json!({
+            "id":format!("g{g}"),
+            "label":format!("自动分组 {g}"),
+            "children":(0..7).map(|c| serde_json::json!({
+                "id":format!("g{g}c{c}"),
+                "label":format!("多设备实时信号编排检查结果 {g}.{c}\n下一步验证"),
+                "ports":[{"name":"out","side":"east","position":0.25},{"name":"in","side":"west","position":0.75}]
+            })).collect::<Vec<_>>(),
+        })).collect();
+        let fixture = serde_json::json!({
+            "canvas":{"width":780,"height":400},
+            "nodes":groups,
+            "edges":[
+                {"id":"cross","from":"g0c0:out","to":"g2c5:in","kind":"bidirectional"},
+                {"id":"between","from":"g1c1:out","to":"g0c5:in"}
+            ],
+        });
+        let diagram = DslParser::new().parse_json(&fixture.to_string()).unwrap();
+        let a = Tecton::layout_named_dsl(&diagram).unwrap();
+        let b = Tecton::layout_named_dsl(&diagram).unwrap();
+        let bounds = a.layout().bounds;
+        let contains = |a: tecton_types::geometry::Rect, b: tecton_types::geometry::Rect| {
+            a.left() <= b.left()
+                && a.top() <= b.top()
+                && a.right() >= b.right()
+                && a.bottom() >= b.bottom()
+        };
+        assert_eq!(
+            bounds.width(),
+            780.0,
+            "must honor width, not grow an unbounded single row"
+        );
+        assert!(
+            bounds.height() > 400.0,
+            "height grows to fit actual content"
+        );
+        for (i, group) in a.layout().root.children.iter().enumerate() {
+            assert!(contains(bounds, group.rect));
+            assert_eq!(group.rect, b.node(&format!("g{i}")).unwrap().rect);
+            for other in &a.layout().root.children[..i] {
+                assert!(!group.rect.intersects(&other.rect));
+            }
+            for (index, child) in group.children.iter().enumerate() {
+                assert!(contains(group.rect, child.rect));
+                assert_eq!(child.rect, b.node(&format!("g{i}c{index}")).unwrap().rect);
+                for other in &group.children[..index] {
+                    assert!(!child.rect.intersects(&other.rect));
+                }
+            }
+        }
+        let route = a.route("cross").unwrap();
+        assert!(route.points().iter().all(|p| bounds.contains(p)));
+        assert_eq!(route.points(), b.route("cross").unwrap().points());
+        let svg = a.render().unwrap();
+        assert!(svg.contains(&format!(
+            r#"viewBox="0 0 {} {}""#,
+            bounds.width(),
+            bounds.height()
+        )));
+        assert_eq!(svg.matches(">下一步验证</text>").count(), 21);
+    }
+
+    #[test]
+    fn named_automatic_packing_rejects_an_unbounded_canvas() {
+        let input = r#"{"canvas":{"width":999999,"height":400},"nodes":[{"id":"a","label":"A"}]}"#;
+        let diagram = DslParser::new().parse_json(input).unwrap();
+        let error = Tecton::layout_named_dsl(&diagram).err().unwrap();
+        assert!(error.to_string().contains("bounded packing input"));
+        // Legacy still retains its independent behavior.
+        assert!(Tecton::render_dsl(&diagram)
+            .unwrap()
+            .contains(r#"viewBox="0 0 800 600""#));
     }
 
     #[test]

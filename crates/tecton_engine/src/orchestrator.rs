@@ -24,7 +24,10 @@ use tecton_types::{
     style::Style,
 };
 
-use crate::layout_graph::{LayoutGraph, LayoutNode};
+use crate::{
+    layout_graph::{LayoutGraph, LayoutNode},
+    named_packing::pack_named_forest,
+};
 
 /// Configuration for the layout and routing engine
 #[derive(Debug, Clone)]
@@ -111,6 +114,9 @@ impl Orchestrator {
 
     /// Run the complete layout and routing pipeline
     pub fn run(&mut self) -> Result<(LayoutResult, RouteSet)> {
+        if self.use_named_terminals {
+            return self.run_named_geometry();
+        }
         // Phase 1: Calculate visual masses
         let masses = self.calculate_masses();
 
@@ -138,18 +144,7 @@ impl Orchestrator {
                 GridGraph::from_rect(&self.config.canvas_bounds, self.config.routing_cell_size);
 
             let routing_margin = self.config.routing_cell_size * 2.0;
-            for (node_id, rect) in &node_bounds {
-                if self.use_named_terminals {
-                    // Group boundaries are permeable; solid leaf cards are not.
-                    if self
-                        .graph
-                        .get_node(*node_id)
-                        .is_some_and(|node| node.children.is_empty())
-                    {
-                        self.block_named_card(&mut grid, rect);
-                    }
-                    continue;
-                }
+            for rect in node_bounds.values() {
                 // Inset the blocked area to leave room for routing around nodes
                 let inset_rect = Rect::new(
                     rect.x() + routing_margin,
@@ -163,12 +158,8 @@ impl Orchestrator {
             }
 
             // Phase 5: Route all edges
-            let routes = if self.use_named_terminals {
-                self.route_named_edges(&grid, &node_bounds)?
-            } else {
-                let port_positions = self.collect_port_positions(&layout, &node_bounds)?;
-                self.route_edges(&grid, &port_positions, &node_bounds)?
-            };
+            let port_positions = self.collect_port_positions(&layout, &node_bounds)?;
+            let routes = self.route_edges(&grid, &port_positions, &node_bounds)?;
             final_routes = routes.clone();
 
             // Check for convergence
@@ -193,6 +184,41 @@ impl Orchestrator {
 
         self.routes = Some(final_routes.clone());
         Ok((final_layout, final_routes))
+    }
+
+    fn run_named_geometry(&mut self) -> Result<(LayoutResult, RouteSet)> {
+        self.computed_layout = None;
+        self.routes = None;
+        let layout = pack_named_forest(&self.graph, &self.config)?;
+        let mut grid = GridGraph::from_rect(&layout.bounds, self.config.routing_cell_size);
+        let mut node_bounds = HashMap::new();
+        for child in &layout.root.children {
+            self.collect_bounds_recursive(child, &mut node_bounds);
+        }
+        // Group boundaries are permeable; solid leaf cards are not.
+        for (id, rect) in &node_bounds {
+            if self
+                .graph
+                .get_node(*id)
+                .is_some_and(|node| node.children.is_empty())
+            {
+                self.block_named_card(&mut grid, rect);
+            }
+        }
+        let routes = self.route_named_edges(&grid, &node_bounds)?;
+        if routes
+            .routes()
+            .iter()
+            .flat_map(|route| route.points())
+            .any(|point| !layout.bounds.contains(&point))
+        {
+            return Err(TectonError::routing(
+                "named route leaves the generated canvas",
+            ));
+        }
+        self.computed_layout = Some(layout.clone());
+        self.routes = Some(routes.clone());
+        Ok((layout, routes))
     }
 
     /// Calculate visual masses for all nodes
@@ -230,26 +256,7 @@ impl Orchestrator {
             .filter_map(|n| masses.get(&n.id).map(|m| (n.id, *m)))
             .collect();
 
-        let canvas = self.config.canvas_bounds;
-        // Leave an exterior lane for author-selected sides, even when a card
-        // would otherwise begin on the viewport boundary.
-        let bounds = if self.use_named_terminals && !self.graph.edges().is_empty() {
-            let gutter = self.config.routing_cell_size * 3.0;
-            if canvas.width() <= 2.0 * gutter || canvas.height() <= 2.0 * gutter {
-                return Err(TectonError::layout(
-                    "canvas too small for named port clearance",
-                ));
-            }
-            Rect::new(
-                canvas.x() + gutter,
-                canvas.y() + gutter,
-                canvas.width() - 2.0 * gutter,
-                canvas.height() - 2.0 * gutter,
-            )
-        } else {
-            canvas
-        };
-        let region = floorplanner.plan(bounds, nodes_with_mass);
+        let region = floorplanner.plan(self.config.canvas_bounds, nodes_with_mass);
 
         // Extract node_regions from the floorplan
         let node_regions = self.extract_node_regions(&region);
@@ -337,15 +344,8 @@ impl Orchestrator {
     ) -> Result<taffy::NodeId> {
         let mut style = self.convert_tecton_style(&node.style);
 
-        // Reserve a local egress lane between adjacent named cards, including
-        // sibling ports inside an open group. Classic processing is unchanged.
-        let margin_inc = margin_map.get(&node.id).copied().unwrap_or(0.0)
-            + if self.use_named_terminals && !node.ports.is_empty() {
-                2.0 * self.config.routing_cell_size
-            } else {
-                0.0
-            };
-        if margin_inc != 0.0 {
+        // Apply congestion margin expansions if any
+        if let Some(margin_inc) = margin_map.get(&node.id) {
             style.margin.left = taffy::style_helpers::length(node.style.margin.left() + margin_inc);
             style.margin.right =
                 taffy::style_helpers::length(node.style.margin.right() + margin_inc);
@@ -923,10 +923,7 @@ impl Orchestrator {
             .as_ref()
             .ok_or_else(|| TectonError::layout("No layout computed"))?;
 
-        let mut renderer = Renderer::svg(
-            self.config.canvas_bounds.width(),
-            self.config.canvas_bounds.height(),
-        );
+        let mut renderer = Renderer::svg(layout.bounds.width(), layout.bounds.height());
 
         renderer.render(layout, self.routes.as_ref())
     }
@@ -938,8 +935,8 @@ impl Orchestrator {
             .as_ref()
             .ok_or_else(|| TectonError::layout("No layout computed"))?;
         tecton_render::SvgBackend::render_automatic_with_title(
-            self.config.canvas_bounds.width(),
-            self.config.canvas_bounds.height(),
+            layout.bounds.width(),
+            layout.bounds.height(),
             layout,
             self.routes.as_ref(),
             title,
@@ -957,8 +954,8 @@ impl Orchestrator {
             .as_ref()
             .ok_or_else(|| TectonError::layout("No layout computed"))?;
         tecton_render::SvgBackend::render_automatic_with_header(
-            self.config.canvas_bounds.width(),
-            self.config.canvas_bounds.height(),
+            layout.bounds.width(),
+            layout.bounds.height(),
             layout,
             self.routes.as_ref(),
             title,

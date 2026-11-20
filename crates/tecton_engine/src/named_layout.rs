@@ -5,10 +5,11 @@ use tecton_layout::layout_context::{LayoutNode, LayoutResult};
 use tecton_routing::route::Route;
 use tecton_types::{
     error::{Result, TectonError},
+    geometry::Rect,
     id::{EdgeId, NodeId, PortId},
 };
 
-use crate::{DiagramDsl, DslParser, Orchestrator};
+use crate::{DiagramDsl, DslParser, Orchestrator, OrchestratorConfig};
 
 /// Declared relation identities. These are not physical port positions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,7 +53,13 @@ impl NamedAutomaticLayout {
         let (graph, bindings) = DslParser::new()
             .to_layout_graph_with_bindings(diagram)
             .map_err(TectonError::parse)?;
-        let mut orchestrator = Orchestrator::new(graph).with_named_terminals();
+        let config = OrchestratorConfig {
+            canvas_bounds: Rect::new(0.0, 0.0, diagram.canvas.width, diagram.canvas.height),
+            ..OrchestratorConfig::default()
+        };
+        let mut orchestrator = Orchestrator::new(graph)
+            .with_config(config)
+            .with_named_terminals();
         orchestrator.run()?;
         let layout = orchestrator
             .layout()
