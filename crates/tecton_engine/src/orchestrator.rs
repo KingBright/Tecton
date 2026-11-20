@@ -8,17 +8,19 @@ use tecton_layout::{
 use tecton_render::Renderer;
 use tecton_routing::{
     congestion_scanner::CongestionScanner,
-    grid_graph::GridGraph,
+    grid_graph::{CellType, GridGraph},
     path_finder::OrthogonalPathFinder,
     route::{Route, RouteSet},
     RoutingEngine,
 };
 use tecton_types::{
+    edge::RouteSegment,
     error::{Result, TectonError},
     geometry::Port,
     geometry::{Point, PortSide, Rect},
     id::{NodeId, PortId},
     mass::VisualMass,
+    shape::ShapeType,
     style::Style,
 };
 
@@ -61,6 +63,28 @@ pub struct Orchestrator {
     computed_layout: Option<LayoutResult>,
     routes: Option<RouteSet>,
     margin_map: HashMap<NodeId, f32>,
+    use_named_terminals: bool,
+}
+
+struct NamedTerminal {
+    border: Point,
+    clearance: Point,
+    grid_center: Point,
+}
+
+// Terminal segments are orthogonal. A tangent touch is not an interior crossing.
+fn segment_enters_rect(a: Point, b: Point, rect: &Rect) -> bool {
+    if a.x() == b.x() {
+        a.x() > rect.left()
+            && a.x() < rect.right()
+            && a.y().min(b.y()) < rect.bottom()
+            && a.y().max(b.y()) > rect.top()
+    } else {
+        a.y() > rect.top()
+            && a.y() < rect.bottom()
+            && a.x().min(b.x()) < rect.right()
+            && a.x().max(b.x()) > rect.left()
+    }
 }
 
 impl Orchestrator {
@@ -71,11 +95,17 @@ impl Orchestrator {
             computed_layout: None,
             routes: None,
             margin_map: HashMap::new(),
+            use_named_terminals: false,
         }
     }
 
     pub fn with_config(mut self, config: OrchestratorConfig) -> Self {
         self.config = config;
+        self
+    }
+
+    pub(crate) fn with_named_terminals(mut self) -> Self {
+        self.use_named_terminals = true;
         self
     }
 
@@ -103,13 +133,23 @@ impl Orchestrator {
 
             // Phase 4: Construct Routing grid
             let node_bounds = self.collect_node_bounds(&layout);
-            let port_positions = self.collect_port_positions(&layout, &node_bounds)?;
 
             let mut grid =
                 GridGraph::from_rect(&self.config.canvas_bounds, self.config.routing_cell_size);
 
             let routing_margin = self.config.routing_cell_size * 2.0;
-            for rect in node_bounds.values() {
+            for (node_id, rect) in &node_bounds {
+                if self.use_named_terminals {
+                    // Group boundaries are permeable; solid leaf cards are not.
+                    if self
+                        .graph
+                        .get_node(*node_id)
+                        .is_some_and(|node| node.children.is_empty())
+                    {
+                        self.block_named_card(&mut grid, rect);
+                    }
+                    continue;
+                }
                 // Inset the blocked area to leave room for routing around nodes
                 let inset_rect = Rect::new(
                     rect.x() + routing_margin,
@@ -123,7 +163,12 @@ impl Orchestrator {
             }
 
             // Phase 5: Route all edges
-            let routes = self.route_edges(&grid, &port_positions, &node_bounds)?;
+            let routes = if self.use_named_terminals {
+                self.route_named_edges(&grid, &node_bounds)?
+            } else {
+                let port_positions = self.collect_port_positions(&layout, &node_bounds)?;
+                self.route_edges(&grid, &port_positions, &node_bounds)?
+            };
             final_routes = routes.clone();
 
             // Check for convergence
@@ -185,7 +230,26 @@ impl Orchestrator {
             .filter_map(|n| masses.get(&n.id).map(|m| (n.id, *m)))
             .collect();
 
-        let region = floorplanner.plan(self.config.canvas_bounds, nodes_with_mass);
+        let canvas = self.config.canvas_bounds;
+        // Leave an exterior lane for author-selected sides, even when a card
+        // would otherwise begin on the viewport boundary.
+        let bounds = if self.use_named_terminals && !self.graph.edges().is_empty() {
+            let gutter = self.config.routing_cell_size * 3.0;
+            if canvas.width() <= 2.0 * gutter || canvas.height() <= 2.0 * gutter {
+                return Err(TectonError::layout(
+                    "canvas too small for named port clearance",
+                ));
+            }
+            Rect::new(
+                canvas.x() + gutter,
+                canvas.y() + gutter,
+                canvas.width() - 2.0 * gutter,
+                canvas.height() - 2.0 * gutter,
+            )
+        } else {
+            canvas
+        };
+        let region = floorplanner.plan(bounds, nodes_with_mass);
 
         // Extract node_regions from the floorplan
         let node_regions = self.extract_node_regions(&region);
@@ -273,8 +337,15 @@ impl Orchestrator {
     ) -> Result<taffy::NodeId> {
         let mut style = self.convert_tecton_style(&node.style);
 
-        // Apply congestion margin expansions if any
-        if let Some(margin_inc) = margin_map.get(&node.id) {
+        // Reserve a local egress lane between adjacent named cards, including
+        // sibling ports inside an open group. Classic processing is unchanged.
+        let margin_inc = margin_map.get(&node.id).copied().unwrap_or(0.0)
+            + if self.use_named_terminals && !node.ports.is_empty() {
+                2.0 * self.config.routing_cell_size
+            } else {
+                0.0
+            };
+        if margin_inc != 0.0 {
             style.margin.left = taffy::style_helpers::length(node.style.margin.left() + margin_inc);
             style.margin.right =
                 taffy::style_helpers::length(node.style.margin.right() + margin_inc);
@@ -451,6 +522,163 @@ impl Orchestrator {
         }
 
         Ok(positions)
+    }
+
+    fn block_named_card(&self, grid: &mut GridGraph, rect: &Rect) {
+        // Block grid-center corridors if the cell overlaps a card. The
+        // half-cell expansion also prevents a through segment hugging a card.
+        let cell = grid.cell_size;
+        let min = |pos: f32| (pos / cell).floor() as usize;
+        let max = |pos: f32| (pos / cell).ceil() as usize;
+        for x in min(rect.left())..max(rect.right()).min(grid.width) {
+            for y in min(rect.top())..max(rect.bottom()).min(grid.height) {
+                grid.set(x, y, CellType::Blocked);
+            }
+        }
+    }
+
+    fn route_named_edges(
+        &self,
+        grid: &GridGraph,
+        node_bounds: &HashMap<NodeId, Rect>,
+    ) -> Result<RouteSet> {
+        let mut routes = RouteSet::new();
+        let path_finder = OrthogonalPathFinder::new().with_bend_penalty(self.config.bend_penalty);
+
+        for edge in self.graph.edges() {
+            let source = self.named_terminal(grid, node_bounds, edge.source_port)?;
+            let target = self.named_terminal(grid, node_bounds, edge.target_port)?;
+            let path = path_finder
+                .find_path(grid, &source.grid_center, &target.grid_center)
+                .ok_or_else(|| {
+                    TectonError::routing("no grid path between named port clearances")
+                })?;
+            // Prefix and suffix are independent of the grid solver. In particular,
+            // the marker tips land at the physical border rather than the grid.
+            let mut interior = vec![source.clearance, source.grid_center];
+            interior.extend(
+                path.into_iter()
+                    .filter_map(|(x, y)| grid.cell_to_point(x, y)),
+            );
+            interior.extend([target.grid_center, target.clearance]);
+            interior.dedup();
+            let mut points: Vec<Point> = Vec::with_capacity(interior.len() + 2);
+            for point in interior {
+                // Grid snapping can introduce a redundant backtrack. Removing
+                // collinear points only shortens a previously traversable union.
+                while let [.., a, b] = points.as_slice() {
+                    let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
+                    let (ex, ey) = (point.x() - b.x(), point.y() - b.y());
+                    if dx * ey != dy * ex {
+                        break;
+                    }
+                    points.pop();
+                }
+                if points.last() != Some(&point) {
+                    points.push(point);
+                }
+            }
+            let segments = std::iter::once(&source.border)
+                .chain(points.iter())
+                .chain(std::iter::once(&target.border))
+                .enumerate()
+                .map(|(i, pt)| {
+                    if i == 0 {
+                        RouteSegment::move_to(pt.x(), pt.y())
+                    } else {
+                        RouteSegment::line_to(pt.x(), pt.y())
+                    }
+                })
+                .collect();
+            let mut route =
+                Route::from_segments(edge.id, edge.source_port, edge.target_port, segments)
+                    .with_edge_kind(edge.kind)
+                    .with_edge_color(edge.color);
+            if let Some(label) = &edge.label {
+                route = route.with_label(label.clone());
+            }
+            routes.add_route(route);
+        }
+        Ok(routes)
+    }
+
+    fn named_terminal(
+        &self,
+        grid: &GridGraph,
+        node_bounds: &HashMap<NodeId, Rect>,
+        port_id: PortId,
+    ) -> Result<NamedTerminal> {
+        let node = self
+            .find_node_by_port(port_id)
+            .and_then(|id| self.graph.get_node(id))
+            .ok_or_else(|| TectonError::routing("named port has no node"))?;
+        let bounds = node_bounds
+            .get(&node.id)
+            .ok_or_else(|| TectonError::routing("named port has no body bounds"))?;
+        let port = &node.ports[&port_id];
+        if node.style.shape != ShapeType::Rectangle
+            || (!node.children.is_empty() && node.label.is_empty())
+        {
+            return Err(TectonError::routing(format!(
+                "named port {:?} requires a visible rectangular node",
+                port.name
+            )));
+        }
+        let fraction = port.position.position();
+        let (extent, radius) = match port.position.side {
+            PortSide::North | PortSide::South => (bounds.width(), bounds.width() / 2.0),
+            PortSide::East | PortSide::West => (bounds.height(), bounds.height() / 2.0),
+        };
+        let radius = node.style.border_radius().clamp(0.0, radius);
+        if extent <= 0.0 || fraction.min(1.0 - fraction) * extent < radius {
+            return Err(TectonError::routing(format!(
+                "named port {:?} is outside the straight rectangular side",
+                port.name
+            )));
+        }
+        let border = port.position.absolute_position(bounds);
+        let pad = self.config.routing_cell_size * 1.5;
+        let (dx, dy) = match port.position.side {
+            PortSide::North => (0.0, -pad),
+            PortSide::South => (0.0, pad),
+            PortSide::East => (pad, 0.0),
+            PortSide::West => (-pad, 0.0),
+        };
+        let probe = Point::new(border.x() + dx, border.y() + dy);
+        let grid_center = grid
+            .point_to_cell(&probe)
+            .and_then(|(x, y)| grid.cell_to_point(x, y))
+            .ok_or_else(|| {
+                TectonError::routing(format!(
+                    "named port {:?} has no outward grid clearance",
+                    port.name
+                ))
+            })?;
+        let clearance = if dx == 0.0 {
+            Point::new(border.x(), grid_center.y())
+        } else {
+            Point::new(grid_center.x(), border.y())
+        };
+        for (other_id, rect) in node_bounds {
+            if *other_id != node.id
+                && self
+                    .graph
+                    .get_node(*other_id)
+                    .is_some_and(|other| other.children.is_empty())
+                && (segment_enters_rect(border, clearance, rect)
+                    || segment_enters_rect(clearance, grid_center, rect))
+            {
+                return Err(TectonError::routing(format!(
+                    "named port {:?} clearance crosses another card",
+                    port.name
+                )));
+            }
+        }
+        Ok(NamedTerminal {
+            border,
+            clearance,
+            grid_center,
+        })
     }
 
     fn route_edges(
@@ -766,6 +994,41 @@ struct FloorplanResult {
 mod tests {
     use super::*;
     use crate::layout_graph::{LayoutNode, LayoutPort};
+
+    #[test]
+    fn named_terminals_do_not_fall_back_through_a_blocked_grid() {
+        let dsl = crate::DslParser::new()
+            .parse_json(
+                r#"{
+            "nodes":[
+                {"id":"a","label":"A","ports":[{"name":"out","side":"east"}]},
+                {"id":"b","label":"B","ports":[{"name":"in","side":"west"}]}
+            ],
+            "edges":[{"id":"e","from":"a:out","to":"b:in"}]
+        }"#,
+            )
+            .unwrap();
+        let (graph, bindings) = crate::DslParser::new()
+            .to_layout_graph_with_bindings(&dsl)
+            .unwrap();
+        let engine = Orchestrator::new(graph).with_named_terminals();
+        let bounds = HashMap::from([
+            (
+                bindings.node_id("a").unwrap(),
+                Rect::new(30.0, 30.0, 80.0, 50.0),
+            ),
+            (
+                bindings.node_id("b").unwrap(),
+                Rect::new(270.0, 30.0, 80.0, 50.0),
+            ),
+        ]);
+        let mut grid = GridGraph::from_rect(&engine.config.canvas_bounds, 10.0);
+        grid.block_rect(&Rect::new(180.0, 0.0, 10.0, 600.0));
+        let error = engine.route_named_edges(&grid, &bounds).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("no grid path between named port clearances"));
+    }
 
     #[test]
     fn test_orchestrator_creation() {

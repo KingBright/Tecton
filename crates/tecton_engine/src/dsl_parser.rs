@@ -174,6 +174,11 @@ impl DslParser {
                 let mut ports = HashSet::new();
                 for port in &node.ports {
                     let name = port.name.as_str();
+                    if !(0.0..=1.0).contains(&port.position) {
+                        return Err(format!(
+                            "port {name:?} on {id:?} must have a fraction in [0, 1]"
+                        ));
+                    }
                     if name.trim().is_empty() || name.contains(':') || !ports.insert(name) {
                         return Err(format!(
                             "empty, invalid or duplicate port {name:?} on {id:?}"

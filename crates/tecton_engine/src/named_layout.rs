@@ -52,7 +52,7 @@ impl NamedAutomaticLayout {
         let (graph, bindings) = DslParser::new()
             .to_layout_graph_with_bindings(diagram)
             .map_err(TectonError::parse)?;
-        let mut orchestrator = Orchestrator::new(graph);
+        let mut orchestrator = Orchestrator::new(graph).with_named_terminals();
         orchestrator.run()?;
         let layout = orchestrator
             .layout()

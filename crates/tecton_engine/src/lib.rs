@@ -260,6 +260,97 @@ legend:
         }
     }
 
+    const NAMED_TERMINAL_FIXTURE: &str = r##"{
+        "nodes":[
+            {"id":"left","label":"Left card","ports":[
+                {"name":"near","side":"east","position":0.25},
+                {"name":"far","side":"east","position":0.75},
+                {"name":"decoy","side":"west","position":0.5}
+            ]},
+            {"id":"right","label":"Right card","ports":[
+                {"name":"upper","side":"east","position":0.25},
+                {"name":"lower","side":"east","position":0.75},
+                {"name":"facing_decoy","side":"west","position":0.5}
+            ]}
+        ],
+        "edges":[
+            {"id":"high","from":"left:near","to":"right:upper","kind":"bidirectional","color":"#165e97"},
+            {"id":"low","from":"left:far","to":"right:lower","kind":"bidirectional","color":"#a64314"}
+        ]
+    }"##;
+
+    #[test]
+    fn named_automatic_terminals_honor_fraction_side_and_port_order() {
+        let mut diagram = DslParser::new().parse_json(NAMED_TERMINAL_FIXTURE).unwrap();
+        for reverse in [false, true] {
+            if reverse {
+                for node in &mut diagram.nodes {
+                    node.ports.reverse();
+                }
+                diagram.edges.reverse();
+            }
+            let rendered = Tecton::layout_named_dsl(&diagram).unwrap();
+            let left = rendered.node("left").unwrap().rect;
+            let right = rendered.node("right").unwrap().rect;
+            assert!(left.right() < right.left());
+            for (id, fraction, color) in [("high", 0.25, "#165e97"), ("low", 0.75, "#a64314")] {
+                let route = rendered.route(id).unwrap();
+                let points = route.points();
+                let (start, end) = (points[0], *points.last().unwrap());
+                assert_eq!(start.x(), left.right());
+                assert_eq!(start.y(), left.top() + left.height() * fraction);
+                // The heuristic-facing side here would be west, not authored east.
+                assert_eq!(end.x(), right.right());
+                assert_eq!(end.y(), right.top() + right.height() * fraction);
+                let (begin_stub, end_stub) = (points[1], points[points.len() - 2]);
+                assert!(begin_stub.x() > start.x() && begin_stub.y() == start.y());
+                assert!(end_stub.x() > end.x() && end_stub.y() == end.y());
+                assert!(points
+                    .windows(2)
+                    .all(|w| { w[0] != w[1] && (w[0].x() == w[1].x() || w[0].y() == w[1].y()) }));
+                let svg = rendered.render().unwrap();
+                let polyline = svg
+                    .lines()
+                    .find(|line| line.starts_with("<polyline ") && line.contains(color))
+                    .unwrap();
+                assert!(polyline.contains("marker-start=") && polyline.contains("marker-end="));
+                let point_str = polyline
+                    .split_once("points=\"")
+                    .unwrap()
+                    .1
+                    .split('"')
+                    .next()
+                    .unwrap();
+                assert!(point_str.starts_with(&format!("{}, {} ", start.x(), start.y())));
+                assert!(point_str.ends_with(&format!(" {}, {}", end.x(), end.y())));
+            }
+        }
+    }
+
+    #[test]
+    fn named_automatic_terminals_reject_invalid_fractions_and_curved_corners() {
+        let bad_fraction = NAMED_TERMINAL_FIXTURE.replacen("0.25", "1.25", 1);
+        let mut diagram = DslParser::new().parse_json(&bad_fraction).unwrap();
+        assert!(Tecton::layout_named_dsl(&diagram)
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("fraction in [0, 1]"));
+        // Classic path still accepts the old clamped position.
+        assert!(Tecton::render_dsl(&diagram).is_ok());
+        let rounded = NAMED_TERMINAL_FIXTURE.replacen(
+            r#""id":"left""#,
+            r#""id":"left","border_radius":20"#,
+            1,
+        );
+        diagram = DslParser::new().parse_json(&rounded).unwrap();
+        assert!(Tecton::layout_named_dsl(&diagram)
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("outside the straight rectangular side"));
+    }
+
     #[test]
     fn named_automatic_layout_rejects_ambiguous_authored_ids() {
         let p = DslParser::new();
