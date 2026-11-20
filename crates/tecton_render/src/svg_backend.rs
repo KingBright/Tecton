@@ -249,16 +249,21 @@ impl SvgBackend {
             r#"<svg x="0" y="{header_height}" width="{width}" height="{height}" viewBox="0 0 {width} {height}" overflow="hidden">"#
         ));
         svg.content.push('\n');
-        svg.render_graph(layout, routes)?;
+        svg.render_graph(layout, routes, (width, height))?;
         svg.content.push_str("</svg>\n");
         svg.end_svg();
         Ok(svg.content)
     }
 
-    fn render_graph(&mut self, layout: &LayoutResult, routes: Option<&RouteSet>) -> Result<()> {
+    fn render_graph(
+        &mut self,
+        layout: &LayoutResult,
+        routes: Option<&RouteSet>,
+        (width, height): (f32, f32),
+    ) -> Result<()> {
         self.render_node_recursive(&layout.root)?;
         if let Some(routes) = routes {
-            self.render_routes(routes)?;
+            self.render_routes_in_viewport(routes, width, height)?;
         }
         Ok(())
     }
@@ -662,7 +667,12 @@ impl SvgBackend {
     }
 
     /// Render a route
-    fn render_route(&mut self, route: &Route, marker: &str) {
+    fn render_route(
+        &mut self,
+        route: &Route,
+        marker: &str,
+        label_position: Option<(f32, f32, f32)>,
+    ) {
         let points: Vec<(f32, f32)> = route.segments.iter().map(|s| (s.x, s.y)).collect();
 
         // Use edge_color and edge_kind from route
@@ -679,15 +689,48 @@ impl SvgBackend {
             Some(marker),
         );
 
-        // Render edge label if present
-        if let Some(ref label) = route.label {
-            if route.segments.len() >= 2 {
-                // Place label at midpoint of route
-                let mid_idx = route.segments.len() / 2;
-                let mid = &route.segments[mid_idx];
-                self.render_text(mid.x, mid.y - 8.0, label, color, 12.0, "middle");
-            }
+        if let (Some(label), Some((x, y, font))) = (&route.label, label_position) {
+            self.render_text(x, y, label, color, font, "middle");
         }
+    }
+
+    fn render_routes_in_viewport(
+        &mut self,
+        routes: &RouteSet,
+        width: f32,
+        height: f32,
+    ) -> Result<()> {
+        // Resolve all positions before writing any of the routes. Fixed scenes retain
+        // their caller-supplied text positions and never enter this path.
+        let routes = routes
+            .routes()
+            .iter()
+            .filter(|route| !route.segments.is_empty())
+            .map(|route| Ok((route, route_label_position(route, width, height)?)))
+            .collect::<Result<Vec<_>>>()?;
+        let first_new_def = self.definitions.len();
+        let routes: Vec<_> = routes
+            .into_iter()
+            .map(|(route, label_position)| {
+                let orient = if route.edge_kind == EdgeKind::Bidirectional {
+                    "auto-start-reverse"
+                } else {
+                    "auto"
+                };
+                (
+                    route,
+                    self.add_arrow_marker_with_orientation(&route.edge_color, orient),
+                    label_position,
+                )
+            })
+            .collect();
+
+        // Mount the actual markers before any polyline references them.
+        self.write_definitions(first_new_def);
+        for (route, marker, label_position) in routes {
+            self.render_route(route, &marker, label_position);
+        }
+        Ok(())
     }
 }
 
@@ -697,10 +740,8 @@ impl Backend for SvgBackend {
         self.definitions.clear();
         self.marker_id_counter = 0;
         self.start_svg();
-
         self.render_background();
-
-        self.render_graph(layout, routes)?;
+        self.render_graph(layout, routes, (self.width, self.height))?;
         self.end_svg();
         Ok(())
     }
@@ -710,30 +751,7 @@ impl Backend for SvgBackend {
     }
 
     fn render_routes(&mut self, routes: &RouteSet) -> Result<()> {
-        let first_new_def = self.definitions.len();
-        let routes: Vec<_> = routes
-            .routes()
-            .iter()
-            .filter(|route| !route.segments.is_empty())
-            .map(|route| {
-                let orient = if route.edge_kind == EdgeKind::Bidirectional {
-                    "auto-start-reverse"
-                } else {
-                    "auto"
-                };
-                (
-                    route,
-                    self.add_arrow_marker_with_orientation(&route.edge_color, orient),
-                )
-            })
-            .collect();
-
-        // Mount the actual markers before any polyline references them.
-        self.write_definitions(first_new_def);
-        for (route, marker) in routes {
-            self.render_route(route, &marker);
-        }
-        Ok(())
+        self.render_routes_in_viewport(routes, self.width, self.height)
     }
 
     fn output(&self) -> Option<String> {
@@ -744,6 +762,68 @@ impl Backend for SvgBackend {
         std::fs::write(path, &self.content).map_err(|e| TectonError::IoError(e))?;
         Ok(())
     }
+}
+
+/// Choose a nearby readable position without modifying the route.
+/// SVG fonts are selected by the viewer, so reserve a conservative em envelope,
+/// including for CJK, rather than promising a font-specific ink measurement.
+fn route_label_position(route: &Route, width: f32, height: f32) -> Result<Option<(f32, f32, f32)>> {
+    let Some(label) = route
+        .label
+        .as_deref()
+        .filter(|label| !label.trim().is_empty())
+    else {
+        return Ok(None);
+    };
+    if route.segments.len() < 2 {
+        return Ok(None);
+    }
+    const PADDING: f32 = 6.0;
+    const FONT_MAX: f32 = 12.0;
+    const FONT_MIN: f32 = 8.0;
+    let ems = label.chars().count() as f32 * 1.25;
+    let font = FONT_MAX
+        .min((width - 2.0 * PADDING) / ems)
+        .min((height - 2.0 * PADDING) / 2.0);
+    if !font.is_finite() || font < FONT_MIN {
+        return Err(TectonError::invalid_input(
+            "edge label cannot fit the automatic SVG viewport",
+        ));
+    }
+    let inset_x = PADDING + font * ems / 2.0;
+    let inset_y = PADDING + font;
+    // Protect against rounding up when the em envelope exactly fills the viewport.
+    let right = (width - inset_x).max(inset_x);
+    let bottom = (height - inset_y).max(inset_y);
+    let mut best = None::<(f32, f32, f32, f32)>;
+    for pair in route.segments.windows(2) {
+        let (a, b) = (&pair[0], &pair[1]);
+        let (dx, dy) = ((b.x - a.x).abs(), (b.y - a.y).abs());
+        let (mid_x, mid_y) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+        let (horizontal, len) = (dx >= dy, dx + dy);
+        let offsets = if horizontal {
+            [(0.0, -font - 2.0), (0.0, font + 2.0)]
+        } else {
+            [
+                (font * ems / 2.0 + 6.0, 0.0),
+                (-font * ems / 2.0 - 6.0, 0.0),
+            ]
+        };
+        for (ox, oy) in offsets {
+            let (raw_x, raw_y) = (mid_x + ox, mid_y + oy);
+            let (x, y) = (raw_x.clamp(inset_x, right), raw_y.clamp(inset_y, bottom));
+            let score = (raw_x - x).abs() + (raw_y - y).abs() + if horizontal { 0.0 } else { font };
+            if !score.is_finite() {
+                continue;
+            }
+            if best.map_or(true, |(old_score, old_len, _, _)| {
+                score < old_score || (score == old_score && len > old_len)
+            }) {
+                best = Some((score, len, x, y));
+            }
+        }
+    }
+    Ok(best.map(|(_, _, x, y)| (x, y, font)))
 }
 
 fn paint_to_css(value: &str) -> Result<String> {

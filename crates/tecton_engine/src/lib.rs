@@ -309,6 +309,77 @@ legend:
     }
 
     #[test]
+    fn automatic_edge_labels_stay_inside_the_body_with_or_without_a_header() {
+        let fixture = r##"{
+            "nodes":[
+                {"id":"a","label":"Card","ports":[{"name":"out","side":"east"}]},
+                {"id":"b","label":"First sink","ports":[{"name":"in","side":"west"}]},
+                {"id":"c","label":"Card","ports":[{"name":"out","side":"east"}]},
+                {"id":"d","label":"Second sink","ports":[{"name":"in","side":"west"}]}
+            ],
+            "edges":[
+                {"id":"alpha","from":"a:out","to":"b:in","kind":"bidirectional","color":"#123456","label":"EDGE_LABEL"},
+                {"id":"beta","from":"c:out","to":"d:in","kind":"dashed","color":"#6a278f","label":"Beta"}
+            ]
+        }"##;
+        fn number(line: &str, attr: &str) -> f32 {
+            line.split_once(&format!(r#" {attr}=""#))
+                .unwrap()
+                .1
+                .split('"')
+                .next()
+                .unwrap()
+                .parse()
+                .unwrap()
+        }
+        let base = Tecton::render_json(&fixture.replace("EDGE_LABEL", "Alpha")).unwrap();
+        // A wide header expands the outer SVG, never the inner body viewport.
+        let decorated = fixture.replace("EDGE_LABEL", "前端服务与消息队列｜数据流转").replacen(
+            '{',
+            &format!(
+                r##"{{"title":"{}","legend":[{{"text":"Sample","color":"#555555","width":2,"arrow_end":true}}],"##,
+                "Extended title ".repeat(4)
+            ),
+            1,
+        );
+        let decorated = Tecton::render_json(&decorated).unwrap();
+        assert!(decorated.contains(r#"viewBox="0 0 800 600" overflow="hidden""#));
+        let polylines = |svg: &str| {
+            svg.lines()
+                .filter(|line| {
+                    line.starts_with("<polyline ")
+                        && (line.contains(r##"stroke="#123456""##)
+                            || line.contains(r##"stroke="#6a278f""##))
+                })
+                .map(|line| line.split_once(" marker-").unwrap().0.to_owned())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(polylines(&base).len(), 2);
+        assert_eq!(polylines(&base), polylines(&decorated));
+        for (svg, label) in [
+            (&base, "Alpha"),
+            (&decorated, "前端服务与消息队列｜数据流转"),
+        ] {
+            let line = svg
+                .lines()
+                .find(|line| line.ends_with(&format!(">{label}</text>")))
+                .unwrap();
+            let font = number(line, "font-size");
+            let x = number(line, "x");
+            let y = number(line, "y");
+            let ink = label.chars().count() as f32 * font * 1.25 / 2.0;
+            assert_eq!(font, 12.0);
+            assert!(x - ink >= 6.0 && x + ink <= 794.0);
+            assert!(y - font >= 6.0 && y + font <= 594.0);
+        }
+        let oversized = fixture.replace("EDGE_LABEL", &"界".repeat(90));
+        assert!(Tecton::render_json(&oversized)
+            .unwrap_err()
+            .to_string()
+            .contains("edge label cannot fit"));
+    }
+
+    #[test]
     fn automatic_route_markers_resolve_for_one_and_two_way_edges() {
         let fixture = r#"{
             "nodes": [
