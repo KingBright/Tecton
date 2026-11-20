@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use tecton_layout::layout_context::{LayoutNode, LayoutResult};
 use tecton_routing::route::{Route, RouteSet};
 use tecton_types::{
+    edge::EdgeKind,
     error::{Result, TectonError},
     shape::ShapeType,
     style::Color,
@@ -178,15 +179,7 @@ impl SvgBackend {
         ));
         self.content.push('\n');
 
-        // Add definitions
-        if !self.definitions.is_empty() {
-            self.content.push_str("<defs>\n");
-            for def in &self.definitions {
-                self.content.push_str(def);
-                self.content.push('\n');
-            }
-            self.content.push_str("</defs>\n");
-        }
+        self.write_definitions(0);
 
         // Add default styles
         if self.inline_styles {
@@ -198,6 +191,19 @@ impl SvgBackend {
                 .push_str(".label { font-family: system-ui, -apple-system, sans-serif; }\n");
             self.content.push_str("</style>\n");
         }
+    }
+
+    fn write_definitions(&mut self, start: usize) {
+        let definitions = &self.definitions[start..];
+        if definitions.is_empty() {
+            return;
+        }
+        self.content.push_str("<defs>\n");
+        for def in definitions {
+            self.content.push_str(def);
+            self.content.push('\n');
+        }
+        self.content.push_str("</defs>\n");
     }
 
     /// End the SVG document
@@ -351,25 +357,6 @@ impl SvgBackend {
         self.content.push('\n');
     }
 
-    /// Render a polyline (route)
-    fn render_polyline(
-        &mut self,
-        points: &[(f32, f32)],
-        color: &Color,
-        stroke_width: f32,
-        dash_array: Option<&str>,
-        marker_end: Option<&str>,
-    ) {
-        self.render_styled_polyline(
-            points,
-            &color_to_css(color),
-            stroke_width,
-            dash_array,
-            None,
-            marker_end,
-        );
-    }
-
     fn render_styled_polyline(
         &mut self,
         points: &[(f32, f32)],
@@ -415,11 +402,6 @@ impl SvgBackend {
         }
 
         self.content.push_str(&format!("<polyline {} />\n", attrs));
-    }
-
-    /// Add an arrow marker definition
-    fn add_arrow_marker(&mut self, color: &Color) -> String {
-        self.add_arrow_marker_with_orientation(color, "auto")
     }
 
     fn add_arrow_marker_with_orientation(&mut self, color: &Color, orientation: &str) -> String {
@@ -486,11 +468,7 @@ impl SvgBackend {
     }
 
     /// Render a route
-    fn render_route(&mut self, route: &Route, _color: &Color, _stroke_width: f32) -> Result<()> {
-        if route.segments.is_empty() {
-            return Ok(());
-        }
-
+    fn render_route(&mut self, route: &Route, marker: &str) {
         let points: Vec<(f32, f32)> = route.segments.iter().map(|s| (s.x, s.y)).collect();
 
         // Use edge_color and edge_kind from route
@@ -498,13 +476,13 @@ impl SvgBackend {
         let stroke_width = route.edge_kind.stroke_width();
         let dash_array = route.edge_kind.stroke_dasharray();
 
-        let marker_id = self.add_arrow_marker(color);
-        self.render_polyline(
+        self.render_styled_polyline(
             &points,
-            color,
+            &color_to_css(color),
             stroke_width,
             dash_array.as_deref(),
-            Some(&marker_id),
+            (route.edge_kind == EdgeKind::Bidirectional).then_some(marker),
+            Some(marker),
         );
 
         // Render edge label if present
@@ -516,13 +494,14 @@ impl SvgBackend {
                 self.render_text(mid.x, mid.y - 8.0, label, color, 12.0, "middle");
             }
         }
-
-        Ok(())
     }
 }
 
 impl Backend for SvgBackend {
     fn render(&mut self, layout: &LayoutResult, routes: Option<&RouteSet>) -> Result<()> {
+        self.content.clear();
+        self.definitions.clear();
+        self.marker_id_counter = 0;
         self.start_svg();
 
         self.render_background();
@@ -544,11 +523,28 @@ impl Backend for SvgBackend {
     }
 
     fn render_routes(&mut self, routes: &RouteSet) -> Result<()> {
-        for route in routes.routes() {
-            // Use a default color for now - in a full implementation,
-            // we'd look up the edge's color from the edge data
-            let color = tecton_types::style::Color::GRAY_500;
-            self.render_route(route, &color, 1.0)?;
+        let first_new_def = self.definitions.len();
+        let routes: Vec<_> = routes
+            .routes()
+            .iter()
+            .filter(|route| !route.segments.is_empty())
+            .map(|route| {
+                let orient = if route.edge_kind == EdgeKind::Bidirectional {
+                    "auto-start-reverse"
+                } else {
+                    "auto"
+                };
+                (
+                    route,
+                    self.add_arrow_marker_with_orientation(&route.edge_color, orient),
+                )
+            })
+            .collect();
+
+        // Mount the actual markers before any polyline references them.
+        self.write_definitions(first_new_def);
+        for (route, marker) in routes {
+            self.render_route(route, &marker);
         }
         Ok(())
     }
@@ -763,8 +759,12 @@ mod tests {
         backend.render(&layout, Some(&route_set)).unwrap();
 
         let output = backend.output().unwrap();
-        // Should have polyline for routes
-        assert!(output.contains("<polyline") || output.contains("<defs>"));
+        assert!(output.contains("<polyline") && output.contains("<defs>"));
+        backend.render(&layout, Some(&route_set)).unwrap();
+        assert_eq!(backend.output().unwrap(), output);
+        backend.render(&layout, None).unwrap();
+        let no_routes = backend.output().unwrap();
+        assert!(!no_routes.contains("<polyline") && !no_routes.contains("<marker"));
     }
 
     #[test]

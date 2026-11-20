@@ -73,6 +73,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn automatic_route_markers_resolve_for_one_and_two_way_edges() {
+        let fixture = r#"{
+            "nodes": [
+                {"id":"a","label":"Source","ports":[{"name":"out","side":"east"}]},
+                {"id":"b","label":"Destination","ports":[{"name":"in","side":"west"}]}
+            ],
+            "edges":[{"from":"a:out","to":"b:in","kind":"EDGE_KIND","label":"Connection"}]
+        }"#;
+        for (kind, orientation, start_count) in [
+            ("default", "auto", 0),
+            ("bidirectional", "auto-start-reverse", 1),
+        ] {
+            let svg = Tecton::render_json(&fixture.replace("EDGE_KIND", kind)).unwrap();
+            assert_eq!(svg.matches(r#"id="arrow-1""#).count(), 1);
+            assert_eq!(svg.matches(r#"marker-end="url(#arrow-1)""#).count(), 1);
+            assert_eq!(
+                svg.matches(r#"marker-start="url(#arrow-1)""#).count(),
+                start_count
+            );
+            assert!(svg.contains(&format!(r#"orient="{orientation}""#)));
+            assert!(svg.find("<marker").unwrap() < svg.find("<polyline").unwrap());
+            assert!(svg.contains(">Source</text>") && svg.contains(">Destination</text>"));
+        }
+    }
+
+    #[test]
     fn test_tecton_api() {
         let json = r#"{
             "canvas": {"width": 400, "height": 300},
