@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use tecton_types::{
@@ -8,7 +8,10 @@ use tecton_types::{
     style::{Color, FlexDirection, Margin, Padding, Style},
 };
 
-use crate::layout_graph::{LayoutGraph, LayoutNode, LayoutPort};
+use crate::{
+    layout_graph::{LayoutGraph, LayoutNode, LayoutPort},
+    named_layout::{BoundEdge, DiagramBindings},
+};
 
 /// DSL representation of a diagram (JSON/YAML compatible)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +151,57 @@ impl DslParser {
 
     /// Convert DSL to LayoutGraph
     pub fn to_layout_graph(&self, dsl: &DiagramDsl) -> Result<LayoutGraph, String> {
+        self.build_layout_graph(dsl).map(|(graph, _)| graph)
+    }
+
+    /// Compile explicitly named graph input, rejecting ambiguous bindings before layout.
+    pub fn to_layout_graph_with_bindings(
+        &self,
+        dsl: &DiagramDsl,
+    ) -> Result<(LayoutGraph, DiagramBindings), String> {
+        fn validate_nodes<'a>(
+            nodes: &'a [NodeSpec],
+            names: &mut HashSet<&'a str>,
+        ) -> Result<(), String> {
+            for node in nodes {
+                let id = node
+                    .id
+                    .as_deref()
+                    .ok_or("every bound node needs an explicit ID")?;
+                if id.trim().is_empty() || id.contains(':') || !names.insert(id) {
+                    return Err(format!("empty, invalid or duplicate bound node ID {id:?}"));
+                }
+                let mut ports = HashSet::new();
+                for port in &node.ports {
+                    let name = port.name.as_str();
+                    if name.trim().is_empty() || name.contains(':') || !ports.insert(name) {
+                        return Err(format!(
+                            "empty, invalid or duplicate port {name:?} on {id:?}"
+                        ));
+                    }
+                }
+                validate_nodes(&node.children, names)?;
+            }
+            Ok(())
+        }
+        validate_nodes(&dsl.nodes, &mut HashSet::new())?;
+        let mut edges = HashSet::new();
+        for edge in &dsl.edges {
+            let id = edge
+                .id
+                .as_deref()
+                .ok_or("every bound edge needs an explicit ID")?;
+            if id.trim().is_empty() || !edges.insert(id) {
+                return Err(format!("empty or duplicate bound edge ID {id:?}"));
+            }
+        }
+        self.build_layout_graph(dsl)
+    }
+
+    fn build_layout_graph(
+        &self,
+        dsl: &DiagramDsl,
+    ) -> Result<(LayoutGraph, DiagramBindings), String> {
         let mut graph = LayoutGraph::new();
         let mut node_id_map: HashMap<String, NodeId> = HashMap::new();
         let mut port_id_map: HashMap<String, PortId> = HashMap::new();
@@ -167,12 +221,22 @@ impl DslParser {
             )?;
         }
 
-        // Process edges
+        let mut edge_id_map = HashMap::new();
         for edge_spec in &dsl.edges {
-            self.process_edge(edge_spec, &mut graph, &node_id_map, &port_id_map)?;
+            let edge = self.process_edge(edge_spec, &mut graph, &port_id_map)?;
+            if let Some(id) = &edge_spec.id {
+                edge_id_map.insert(id.clone(), edge);
+            }
         }
 
-        Ok(graph)
+        Ok((
+            graph,
+            DiagramBindings {
+                nodes: node_id_map,
+                ports: port_id_map,
+                edges: edge_id_map,
+            },
+        ))
     }
 
     fn process_node(
@@ -292,9 +356,8 @@ impl DslParser {
         &self,
         spec: &EdgeSpec,
         graph: &mut LayoutGraph,
-        node_id_map: &HashMap<String, NodeId>,
         port_id_map: &HashMap<String, PortId>,
-    ) -> Result<(), String> {
+    ) -> Result<BoundEdge, String> {
         // Parse port references
         let source_port_id = port_id_map
             .get(&spec.from)
@@ -319,9 +382,13 @@ impl DslParser {
             edge.label = Some(label.clone());
         }
 
+        let binding = BoundEdge {
+            edge_id: edge.id,
+            source_port: edge.source_port,
+            target_port: edge.target_port,
+        };
         graph.add_edge(edge)?;
-
-        Ok(())
+        Ok(binding)
     }
 }
 

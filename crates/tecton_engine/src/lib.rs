@@ -7,11 +7,13 @@
 
 pub mod dsl_parser;
 pub mod layout_graph;
+pub mod named_layout;
 pub mod orchestrator;
 pub mod tecton_dsl_converter;
 
 pub use dsl_parser::{CanvasSpec, DiagramDsl, DslParser, EdgeSpec, NodeSpec};
 pub use layout_graph::{LayoutGraph, LayoutNode, LayoutPort};
+pub use named_layout::{BoundEdge, DiagramBindings, NamedAutomaticLayout};
 pub use orchestrator::{Orchestrator, OrchestratorConfig};
 
 use serde::Deserialize;
@@ -55,6 +57,13 @@ impl Tecton {
         } else {
             orchestrator.render_with_header(title, legend)
         }
+    }
+
+    /// Compute geometry through the ordinary automatic engine, then retain the
+    /// exact authored node/port/edge identities for semantic decoration.
+    /// All nodes and edges must have explicit, unique IDs.
+    pub fn layout_named_dsl(diagram: &DiagramDsl) -> Result<NamedAutomaticLayout> {
+        NamedAutomaticLayout::compute(diagram)
     }
 
     /// Render a diagram from JSON, with an optional title and legend.
@@ -208,6 +217,70 @@ legend:
         assert!(rows[0].contains(r#"x="74" y="29""#));
         assert!(rows[1].contains(r#"x="74" y="55""#));
         assert!(svg.contains(r#"<svg x="0" y="90""#));
+    }
+
+    #[test]
+    fn named_automatic_layout_keeps_parallel_relation_identity() {
+        let json = r##"{
+            "nodes":[{"id":"group","label":"Group","children":[
+                {"id":"a","label":"Card","ports":[{"name":"out","side":"east"}]},
+                {"id":"b","label":"Card","ports":[{"name":"in","side":"west"}]}]}],
+            "edges":[
+                {"id":"first","from":"a:out","to":"b:in","label":"First","color":"#123456"},
+                {"id":"second","from":"a:out","to":"b:in","label":"Second","color":"#234567","kind":"dashed"}
+            ]
+        }"##;
+        let mut dsl = DslParser::new().parse_json(json).unwrap();
+        for reverse in [false, true] {
+            if reverse {
+                dsl.edges.reverse();
+            }
+            let result = Tecton::layout_named_dsl(&dsl).unwrap();
+            assert_eq!(result.node("group").unwrap().children.len(), 2);
+            assert_eq!(result.node("a").unwrap().label, "Card");
+            assert_eq!(result.node("b").unwrap().label, "Card");
+            assert_ne!(
+                result.node("a").unwrap().rect,
+                result.node("b").unwrap().rect
+            );
+            let bindings = result.bindings();
+            let first = bindings.edge("first").unwrap();
+            let second = bindings.edge("second").unwrap();
+            assert_ne!(first.edge_id, second.edge_id);
+            assert_eq!(bindings.port_id("a:out"), Some(first.source_port));
+            assert_eq!(bindings.port_id("b:in"), Some(second.target_port));
+            let first = result.route("first").unwrap();
+            let second = result.route("second").unwrap();
+            assert_eq!(first.label.as_deref(), Some("First"));
+            assert_eq!(second.label.as_deref(), Some("Second"));
+            assert_ne!(first.edge_color, second.edge_color);
+            assert!(first.segments.len() >= 2 && second.segments.len() >= 2);
+            assert!(result.route("unknown").is_none());
+            assert!(result.render().unwrap().contains("Second"));
+        }
+    }
+
+    #[test]
+    fn named_automatic_layout_rejects_ambiguous_authored_ids() {
+        let p = DslParser::new();
+        let duplicate = p
+            .parse_json(r#"{"nodes":[{"id":"a","label":"A","children":[{"id":"a","label":"B"}]}]}"#)
+            .unwrap();
+        assert!(p
+            .to_layout_graph_with_bindings(&duplicate)
+            .unwrap_err()
+            .contains("duplicate bound node ID"));
+        let absent = p.parse_json(r#"{"nodes":[{"label":"Legacy"}]}"#).unwrap();
+        assert!(p
+            .to_layout_graph_with_bindings(&absent)
+            .unwrap_err()
+            .contains("explicit ID"));
+        assert!(Tecton::render_dsl(&absent).is_ok());
+        let duplicate_edge = p.parse_json(r#"{"edges":[{"id":"e","from":"a:n","to":"b:n"},{"id":"e","from":"b:n","to":"a:n"}]}"#).unwrap();
+        assert!(p
+            .to_layout_graph_with_bindings(&duplicate_edge)
+            .unwrap_err()
+            .contains("duplicate bound edge ID"));
     }
 
     #[test]
