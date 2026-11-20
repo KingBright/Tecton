@@ -12,3 +12,4 @@ tecton_types = { workspace = true }
 tecton_layout = { workspace = true }
 tecton_routing = { workspace = true }
 thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }

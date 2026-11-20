@@ -8,7 +8,10 @@ use tecton_types::{
     style::Color,
 };
 
-use crate::backend::Backend;
+use crate::{
+    backend::Backend,
+    fixed_scene::{dash_css, paint, FixedNode, FixedScene, LineKind, TextRun},
+};
 
 /// SVG rendering backend
 pub struct SvgBackend {
@@ -45,6 +48,121 @@ impl SvgBackend {
             node_styles: HashMap::new(),
             marker_id_counter: 0,
         }
+    }
+
+    /// Render an explicitly positioned scene without invoking layout or routing.
+    /// Visual routes are drawn exactly once, even if multiple logical edges refer to them.
+    pub fn render_fixed_scene(scene: &FixedScene) -> Result<String> {
+        scene.validate()?;
+        let mut svg = Self::new(scene.canvas[0], scene.canvas[1]);
+        let markers = scene
+            .edges
+            .iter()
+            .map(|route| {
+                let color = paint(&route.color)?;
+                Ok(if route.arrow_start || route.arrow_end {
+                    color.map(|color| {
+                        svg.add_arrow_marker_with_orientation(&color, "auto-start-reverse")
+                    })
+                } else {
+                    None
+                })
+            })
+            .collect::<Result<Vec<_>>>()?;
+        svg.start_svg();
+        svg.render_background();
+        for node in &scene.nodes {
+            svg.render_fixed_rects(node, false)?;
+        }
+        for (route, marker) in scene.edges.iter().zip(markers.iter()) {
+            let points: Vec<_> = route.points.iter().map(|[x, y]| (*x, *y)).collect();
+            let dash = route
+                .dash
+                .as_deref()
+                .map(dash_css)
+                .or_else(|| matches!(route.kind, LineKind::Dashed).then(|| "6 4".to_owned()));
+            svg.render_styled_polyline(
+                &points,
+                paint_to_css(&route.color)?.as_str(),
+                route.width,
+                dash.as_deref(),
+                marker.as_deref().filter(|_| route.arrow_start),
+                marker.as_deref().filter(|_| route.arrow_end),
+            );
+        }
+        for node in &scene.nodes {
+            svg.render_fixed_rects(node, true)?;
+        }
+        for node in &scene.nodes {
+            svg.render_fixed_texts(node)?;
+        }
+        for text in &scene.annotations {
+            svg.render_fixed_text(text)?;
+        }
+        svg.end_svg();
+        Ok(svg.content)
+    }
+
+    fn render_background(&mut self) {
+        self.content.push_str(&format!(
+            r#"<rect x="0" y="0" width="{}" height="{}" fill="white" />"#,
+            self.width, self.height
+        ));
+        self.content.push('\n');
+    }
+
+    fn render_fixed_rects(&mut self, node: &FixedNode, draw_leaves: bool) -> Result<()> {
+        if node.children.is_empty() == draw_leaves {
+            let fill = paint_to_css(&node.fill)?;
+            let stroke = paint_to_css(&node.border)?;
+            let [x, y, w, h] = node.rect;
+            let dash = node.border_dash.as_deref().map(dash_css);
+            self.render_styled_rect(
+                x,
+                y,
+                w,
+                h,
+                &fill,
+                &stroke,
+                node.border_width,
+                node.border_radius,
+                dash.as_deref(),
+            );
+        }
+        for child in &node.children {
+            self.render_fixed_rects(child, draw_leaves)?;
+        }
+        Ok(())
+    }
+
+    fn render_fixed_texts(&mut self, node: &FixedNode) -> Result<()> {
+        if node.text_runs.is_empty() && !node.label.is_empty() {
+            let [x, y, w, h] = node.rect;
+            self.render_text(
+                x + w / 2.0,
+                y + h / 2.0,
+                &node.label,
+                &Color::BLACK,
+                14.0,
+                "middle",
+            );
+        }
+        for text in &node.text_runs {
+            self.render_fixed_text(text)?;
+        }
+        for child in &node.children {
+            self.render_fixed_texts(child)?;
+        }
+        Ok(())
+    }
+
+    fn render_fixed_text(&mut self, run: &TextRun) -> Result<()> {
+        self.content.push_str(&format!(
+            "<text x=\"{}\" y=\"{}\" fill=\"{}\" font-size=\"{}\" font-weight=\"{}\" font-family=\"PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, Microsoft YaHei, sans-serif\" xml:space=\"preserve\">{}</text>\n",
+            run.rect[0], run.baseline_y, paint_to_css(&run.color)?, run.font_size,
+            run.font_weight.unwrap_or(400), escape_xml(&run.text)
+        ));
+        Ok(())
     }
 
     pub fn with_inline_styles(mut self, inline: bool) -> Self {
@@ -101,7 +219,23 @@ impl SvgBackend {
         let stroke_width = style.border_width();
         let rx = style.border_radius();
 
-        let attrs = if rx > 0.0 {
+        self.render_styled_rect(x, y, width, height, &fill, &stroke, stroke_width, rx, None);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_styled_rect(
+        &mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        fill: &str,
+        stroke: &str,
+        stroke_width: f32,
+        rx: f32,
+        dash: Option<&str>,
+    ) {
+        let mut attrs = if rx > 0.0 {
             format!(
                 r#"x="{}" y="{}" width="{}" height="{}" rx="{}" ry="{}" fill="{}" stroke="{}" stroke-width="{}" class="node""#,
                 x, y, width, height, rx, rx, fill, stroke, stroke_width
@@ -112,7 +246,9 @@ impl SvgBackend {
                 x, y, width, height, fill, stroke, stroke_width
             )
         };
-
+        if let Some(dash) = dash {
+            attrs.push_str(&format!(r#" stroke-dasharray="{}""#, dash));
+        }
         self.content.push_str(&format!("<rect {} />\n", attrs));
     }
 
@@ -224,6 +360,25 @@ impl SvgBackend {
         dash_array: Option<&str>,
         marker_end: Option<&str>,
     ) {
+        self.render_styled_polyline(
+            points,
+            &color_to_css(color),
+            stroke_width,
+            dash_array,
+            None,
+            marker_end,
+        );
+    }
+
+    fn render_styled_polyline(
+        &mut self,
+        points: &[(f32, f32)],
+        stroke: &str,
+        stroke_width: f32,
+        dash_array: Option<&str>,
+        marker_start: Option<&str>,
+        marker_end: Option<&str>,
+    ) {
         if points.is_empty() {
             return;
         }
@@ -242,8 +397,6 @@ impl SvgBackend {
             .collect::<Vec<_>>()
             .join(" ");
 
-        let stroke = color_to_css(color);
-
         let mut attrs = format!(
             r#"points="{}" fill="none" stroke="{}" stroke-width="{}" class="edge""#,
             points_str, stroke, stroke_width
@@ -251,6 +404,10 @@ impl SvgBackend {
 
         if let Some(dash) = dash_array {
             attrs.push_str(&format!(r#" stroke-dasharray="{}""#, dash));
+        }
+
+        if let Some(marker) = marker_start {
+            attrs.push_str(&format!(r#" marker-start="url(#{})""#, marker));
         }
 
         if let Some(marker) = marker_end {
@@ -262,15 +419,19 @@ impl SvgBackend {
 
     /// Add an arrow marker definition
     fn add_arrow_marker(&mut self, color: &Color) -> String {
+        self.add_arrow_marker_with_orientation(color, "auto")
+    }
+
+    fn add_arrow_marker_with_orientation(&mut self, color: &Color, orientation: &str) -> String {
         self.marker_id_counter += 1;
         let id = format!("arrow-{}", self.marker_id_counter);
         let stroke = color_to_css(color);
 
         let marker = format!(
-            r#"<marker id="{}" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            r#"<marker id="{}" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="{}" markerUnits="strokeWidth">
                 <path d="M0,0 L0,6 L9,3 z" fill="{}" />
             </marker>"#,
-            id, stroke
+            id, orientation, stroke
         );
 
         self.definitions.push(marker);
@@ -294,8 +455,16 @@ impl SvgBackend {
 
             // Render label if present
             if has_label {
-                let text_x = if is_leaf { rect.x() + rect.width() / 2.0 } else { rect.x() + 10.0 };
-                let text_y = if is_leaf { rect.y() + rect.height() / 2.0 } else { rect.y() + 15.0 };
+                let text_x = if is_leaf {
+                    rect.x() + rect.width() / 2.0
+                } else {
+                    rect.x() + 10.0
+                };
+                let text_y = if is_leaf {
+                    rect.y() + rect.height() / 2.0
+                } else {
+                    rect.y() + 15.0
+                };
                 let anchor = if is_leaf { "middle" } else { "start" };
                 self.render_text(
                     text_x,
@@ -356,12 +525,7 @@ impl Backend for SvgBackend {
     fn render(&mut self, layout: &LayoutResult, routes: Option<&RouteSet>) -> Result<()> {
         self.start_svg();
 
-        // Add a background
-        self.content.push_str(&format!(
-            r#"<rect x="0" y="0" width="{}" height="{}" fill="white" />"#,
-            self.width, self.height
-        ));
-        self.content.push('\n');
+        self.render_background();
 
         // Render all nodes
         self.render_node_recursive(&layout.root)?;
@@ -397,6 +561,10 @@ impl Backend for SvgBackend {
         std::fs::write(path, &self.content).map_err(|e| TectonError::IoError(e))?;
         Ok(())
     }
+}
+
+fn paint_to_css(value: &str) -> Result<String> {
+    Ok(paint(value)?.map_or_else(|| "none".to_owned(), |color| color_to_css(&color)))
 }
 
 /// Convert a Color to CSS color string

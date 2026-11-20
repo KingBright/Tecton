@@ -6,6 +6,7 @@
 //! - Debug backend for grid visualization
 
 pub mod backend;
+pub mod fixed_scene;
 pub mod svg_backend;
 
 pub use backend::{Backend, DebugBackend};

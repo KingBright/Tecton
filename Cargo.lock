@@ -433,6 +433,7 @@ dependencies = [
 name = "tecton_render"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "tecton_layout",
  "tecton_routing",
  "tecton_types",
